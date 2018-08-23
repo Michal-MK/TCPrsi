@@ -46,14 +46,14 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 3.15, y: 4.75}
+    oldSize: {x: 3.75, y: 6}
     newSize: {x: 3.15, y: 4.75}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 3.15, y: 4.75}
+  m_Size: {x: 3.75, y: 6}
   m_EdgeRadius: 0
 --- !u!114 &114071296921657486
 MonoBehaviour:
@@ -113,9 +113,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3186992305d053f4db2a432bcb1ccd8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  manager: {fileID: 0}
   myRenderer: {fileID: 212311728194773010}
   face: {fileID: 0}
   cover: {fileID: 21300000, guid: 72aba9f995cb11b4f816ba1019c6f4f3, type: 3}
+  collider: {fileID: 0}
+  currentOwner: {fileID: 0}
 --- !u!212 &212311728194773010
 SpriteRenderer:
   m_ObjectHideFlags: 1
@@ -177,6 +180,6 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 3.15, y: 4.75}
+  m_AnchoredPosition: {x: 5.18, y: 0.29}
+  m_SizeDelta: {x: 3.75, y: 6}
   m_Pivot: {x: 0.5, y: 0.5}

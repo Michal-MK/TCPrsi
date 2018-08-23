@@ -1,12 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
-using System;
 
+
+[System.Serializable]
 public class Card : MonoBehaviour, IEndDragHandler {
-
-
 
 	public enum CardValue {
 		Sedm,
@@ -17,7 +14,6 @@ public class Card : MonoBehaviour, IEndDragHandler {
 		Svrsek,
 		Kral,
 		Eso
-
 	}
 
 	public enum CardColor {
@@ -25,21 +21,19 @@ public class Card : MonoBehaviour, IEndDragHandler {
 		Kule,
 		Listy,
 		Zaludy
-
 	}
-
 
 	public GameManager manager;
 	public SpriteRenderer myRenderer;
 	public Sprite face;
 	public Sprite cover;
-	private bool faceUp;
-	public BoxCollider2D collider;
+	private bool isFaceUp;
+	new public BoxCollider2D collider;
 	public Player currentOwner;
 
 	public bool IsFaceUp {
 		get {
-			return faceUp;
+			return isFaceUp;
 		}
 		set {
 			if (value == true) {
@@ -48,18 +42,20 @@ public class Card : MonoBehaviour, IEndDragHandler {
 			else {
 				myRenderer.sprite = cover;
 			}
-			faceUp = value;
+			isFaceUp = value;
 		}
 	}
+
 	public CardValue cardValue { get; private set; }
-	public CardColor cardColor { get; private set; }
+	public CardColor cardColor { get; set; }
 
 	public void Initialise(CardValue cV, CardColor cC) {
-		myRenderer = gameObject.GetComponent<SpriteRenderer>();
+		myRenderer = GetComponent<SpriteRenderer>();
+		collider = GetComponent<BoxCollider2D>();
+
 		cardValue = cV;
 		cardColor = cC;
 		SetSprites();
-		collider = gameObject.GetComponent<BoxCollider2D>();
 	}
 
 	private void SetSprites() {
@@ -69,12 +65,6 @@ public class Card : MonoBehaviour, IEndDragHandler {
 
 	public void Drag() {
 		gameObject.transform.position = (Vector2)Camera.main.ScreenToWorldPoint(Input.mousePosition);
-		//print("k");
-	}
-
-	public void Click() {
-		//IsFaceUp = !IsFaceUp;
-
 	}
 
 	public void MoveToTalon() {
@@ -82,7 +72,6 @@ public class Card : MonoBehaviour, IEndDragHandler {
 		transform.rotation = Quaternion.Euler(0, 0, UnityEngine.Random.Range(0f, 360f));
 		collider.enabled = false;
 		IsFaceUp = true;
-
 	}
 
 	public void MoveToDeck() {
@@ -90,26 +79,17 @@ public class Card : MonoBehaviour, IEndDragHandler {
 		transform.rotation = Quaternion.identity;
 		collider.enabled = false;
 		IsFaceUp = false;
-
 	}
 
 
 	public void OnEndDrag(PointerEventData eventData) {
-		//print("Drop");
 		RaycastHit2D[] hits = Physics2D.RaycastAll(eventData.pointerCurrentRaycast.worldPosition, eventData.pointerCurrentRaycast.worldNormal);
-		if (hits.Length == 0) {
 
-		}
-		else {
-			foreach (RaycastHit2D hit2D in hits) {
-				if (hit2D.transform.name == "TalonCollider") {
-					currentOwner.Play(this);
-					
-					
-					return;
-				}
+		foreach (RaycastHit2D hit2D in hits) {
+			if (hit2D.transform.name == "TalonCollider") {
+				currentOwner.Play(this);
+				return;
 			}
-
 		}
 		currentOwner.ArrangeCards();
 	}
