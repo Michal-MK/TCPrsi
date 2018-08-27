@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using static Structs;
 
 public class Player : MonoBehaviour {
 
@@ -13,17 +14,32 @@ public class Player : MonoBehaviour {
 
 	private bool waitingForInput;
 	private bool turnInProgress;
+	public bool controlledByLocal;
 	
 	private Card workingCard;
 
-	public int index;
+	public byte index;
 
-	public void Initialise() {
-		hand =  new List<Card>();
+	public string controllingClientName;
+
+	public void Initialise(byte index, string playerName, GameManager manager) {
+		this.name = playerName + "_PlayerObject";
+		this.index = index;
+		controllingClientName = playerName;
+		this.manager = manager;
+		if (controllingClientName == System.Environment.UserName) {
+			controlledByLocal = true;
+		}
+		hand = new List<Card>();
 		GameManager.OnTurnBegin += BeginTurn;
  	}
 
+	public void OnDestroy() {
+		GameManager.OnTurnBegin -= BeginTurn;
+	}
+
 	public void Draw(int numCards) {
+		Card drawnCard = null;
 		if (waitingForInput || !turnInProgress) {
 			ArrangeCards();
 			return;
@@ -31,16 +47,24 @@ public class Player : MonoBehaviour {
 		for (int i = 0; i < numCards; i++) {
 			Card c = manager.deckManager.DrawCard();
 			c.currentOwner = this;
-			c.IsFaceUp = true;
-			c.collider.enabled = true;
+			
+			c.IsFaceUp = controlledByLocal;
+			c.myCollider.enabled = true;
 
 			hand.Add(c);
+			drawnCard = c;
 			ArrangeCards();
 		}
-		EndTurn();
+		if (controlledByLocal  && manager.gameBegan) {
+			manager.SendCardDrawn(new DrawCardAction(numCards, index));
+		}
+		turnInProgress = false;
+
+		OnEndTurn(this, this);
 	}
 
 	public void Play(Card card) {
+
 		if (waitingForInput  || !turnInProgress) {
 			ArrangeCards();
 			return;
@@ -48,54 +72,81 @@ public class Player : MonoBehaviour {
 
 		switch (card.cardValue) {
 			case Card.CardValue.Sedm: {
-				if (manager.deckManager.talon.Peek().cardColor == card.cardColor || manager.deckManager.talon.Peek().cardValue == card.cardValue) {
+				if ((manager.deckManager.talon.Peek().cardColor == card.cardColor || manager.deckManager.talon.Peek().cardValue == card.cardValue ) && manager.AceState == false) {
 					card.MoveToTalon();
 					hand.Remove(card);
 					int order = manager.deckManager.talon.Peek().myRenderer.sortingOrder;
 					manager.deckManager.talon.Push(card);
 					card.myRenderer.sortingOrder = order + 1;
 					card.currentOwner = null;
-					EndTurn();
+					if (controlledByLocal) {
+						manager.SendCardPlayed(new PlayCardAction(new CardInfo(card.cardColor, card.cardValue), index));
+					}
+
+					manager.SevenState += 2;
+					turnInProgress = false;
+					
+					
+
+					OnEndTurn(this, this);
 				}
 				break;
 			}
 			case Card.CardValue.Svrsek: {
-				card.MoveToTalon();
-				hand.Remove(card);
-				workingCard = card;
+				if(manager.AceState == false && manager.SevenState == 0) {
+					card.MoveToTalon();
+					hand.Remove(card);
+					workingCard = card;
 
-				int order = manager.deckManager.talon.Peek().myRenderer.sortingOrder;
-				manager.deckManager.talon.Push(card);
-				card.myRenderer.sortingOrder = order + 1;
-				card.currentOwner = null;
-				GetColorInput();
+					int order = manager.deckManager.talon.Peek().myRenderer.sortingOrder;
+					manager.deckManager.talon.Push(card);
+					card.myRenderer.sortingOrder = order + 1;
+					card.currentOwner = null;
+					if (controlledByLocal) {
+						GetColorInput();
+						manager.SendCardPlayed(new PlayCardAction(new CardInfo(card.cardColor, card.cardValue), index));
+					}
+				}
+				
 				break;
 			}
 			case Card.CardValue.Eso: {
-				if (manager.deckManager.talon.Peek().cardColor == card.cardColor || manager.deckManager.talon.Peek().cardValue == card.cardValue) {
+				if ((manager.deckManager.talon.Peek().cardColor == card.cardColor || manager.deckManager.talon.Peek().cardValue == card.cardValue) && manager.SevenState == 0) {
 					card.MoveToTalon();
 					hand.Remove(card);
 					int order = manager.deckManager.talon.Peek().myRenderer.sortingOrder;
 					manager.deckManager.talon.Push(card);
 					card.myRenderer.sortingOrder = order + 1;
 					card.currentOwner = null;
-					EndTurn();
+					if (controlledByLocal) {
+						manager.SendCardPlayed(new PlayCardAction(new CardInfo(card.cardColor, card.cardValue), index));
+					}
+					turnInProgress = false;
+
+					manager.AceState = true;
+					OnEndTurn(this, this);
 				}
 				break;
 			}
 			default: {
-				if (manager.deckManager.talon.Peek().cardColor == card.cardColor || manager.deckManager.talon.Peek().cardValue == card.cardValue) {
+				if ((manager.deckManager.talon.Peek().cardColor == card.cardColor || manager.deckManager.talon.Peek().cardValue == card.cardValue) && manager.SevenState == 0 && manager.AceState == false) {
 					card.MoveToTalon();
 					hand.Remove(card);
 					int order = manager.deckManager.talon.Peek().myRenderer.sortingOrder;
 					manager.deckManager.talon.Push(card);
 					card.myRenderer.sortingOrder = order + 1;
 					card.currentOwner = null;
-					EndTurn();
+					if (controlledByLocal) {
+						manager.SendCardPlayed(new PlayCardAction(new CardInfo(card.cardColor, card.cardValue), index));
+					}
+					turnInProgress = false;
+
+					OnEndTurn(this, this);
 				}
 				break;
 			}
 		}
+		
 
 		if (hand.Count == 0) {
 			OnVictory?.Invoke(this, this);
@@ -108,8 +159,9 @@ public class Player : MonoBehaviour {
 			if(index == 0) {
 				hand[i].transform.position = new Vector2(-11 + i * 2, -7f);
 			}
-			else if (index == 1) {
+			else {
 				hand[i].transform.position = new Vector2(-11 + i * 2, 7f);
+				
 			}
 			hand[i].myRenderer.sortingOrder = i;
 		}
@@ -117,28 +169,32 @@ public class Player : MonoBehaviour {
 
 	public void GetColorInput() {
 		Controls.OnColorSelected += ColorSelected;
-		Controls.RaiseOnControlSwitch(true);
+		manager.controls.colorSelector.SetActive(true);
 		waitingForInput = true;
 	}
 
-	public void ColorSelected(Card.CardColor color) {
-		workingCard.cardColor = color;
-		workingCard = null;
+	public void ColorSelected(object sender,Card.CardColor color) {
+		
 		waitingForInput = false;
 		Controls.OnColorSelected -= ColorSelected;
-		EndTurn();
+		workingCard.cardColor = color;
+		workingCard = null;
+		manager.ShowSelectedColor(color);
+
+		if (controlledByLocal) {
+			manager.SendExtraAction(new ExtraCardArgs(color, index));
+		}
+		turnInProgress = false;
+
+		OnEndTurn(this, this);
+
 	}
 
-	private void EndTurn() {
-		turnInProgress = false;
-		OnEndTurn(this,this);
-		FlipCards(false);
-	}
+
 
 	public void BeginTurn(object sender, Player player) {
-		if(player == this) {
+		if (player == this) {
 			turnInProgress = true;
-			FlipCards(true);
 		}
 	} 
 
@@ -146,5 +202,15 @@ public class Player : MonoBehaviour {
 		foreach (Card card in hand) {
 			card.IsFaceUp = visible;
 		}
+	}
+
+
+	public Card cardFromCardInfo(CardInfo info) {
+		foreach (Card card in hand) {
+			if(card.cardValue == info.value && card.cardColor == info.color) {
+				return card;
+			}
+		}
+		throw new SynchronizationException(string.Format("SyncError, card {0} {1} not in '{2}'s hand!", info.color, info.value, controllingClientName));
 	}
 }

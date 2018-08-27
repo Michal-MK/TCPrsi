@@ -6,7 +6,7 @@
     <members>
         <member name="T:Igor.TCP.ClientConnectedEventArgs">
             <summary>
-            OnConnectionReceived event args.
+            OnConnectionReceived event arguments
             </summary>
         </member>
         <member name="P:Igor.TCP.ClientConnectedEventArgs.myServer">
@@ -14,9 +14,19 @@
             Reference to the server that accepted this connection
             </summary>
         </member>
-        <member name="P:Igor.TCP.ClientConnectedEventArgs.connInfo">
+        <member name="P:Igor.TCP.ClientConnectedEventArgs.clientInfo">
             <summary>
-            Basic information about client
+            Basic Information about client
+            </summary>
+        </member>
+        <member name="T:Igor.TCP.ClientDisconnectedEventArgs">
+            <summary>
+            Client Disconnected event data
+            </summary>
+        </member>
+        <member name="P:Igor.TCP.ClientDisconnectedEventArgs.clientID">
+            <summary>
+            ID of the disconnected client
             </summary>
         </member>
         <member name="T:Igor.TCP.ConnectionData">
@@ -39,29 +49,9 @@
             Initialize new ConnectionData, used for connecting to the server
             </summary>
         </member>
-        <member name="T:Igor.TCP.ConnectionInfo">
-            <summary>
-            Basic information about connected client
-            </summary>
-        </member>
-        <member name="P:Igor.TCP.ConnectionInfo.connectedAddress">
-            <summary>
-            Origin of incomming connection
-            </summary>
-        </member>
-        <member name="P:Igor.TCP.ConnectionInfo.connectionID">
-            <summary>
-            Server-assigned ID for client
-            </summary>
-        </member>
         <member name="T:Igor.TCP.DataIDs">
             <summary>
-            Class holding packet IDs and received data resoluton and unpacking
-            </summary>
-        </member>
-        <member name="F:Igor.TCP.DataIDs.TCPDataID">
-            <summary>
-            Packet ID for TCPData structure
+            Class holding packet IDs and received data resolution and unpacking
             </summary>
         </member>
         <member name="F:Igor.TCP.DataIDs.StringID">
@@ -86,7 +76,7 @@
         </member>
         <member name="F:Igor.TCP.DataIDs.ClientDisconnected">
             <summary>
-            NIY, no guarantee of safety when using this TODO
+            Packet ID to signalize client disconnect
             </summary>
         </member>
         <member name="F:Igor.TCP.DataIDs.RequestReceptionID">
@@ -102,6 +92,11 @@
         <member name="F:Igor.TCP.DataIDs.PropertySyncID">
             <summary>
             Packet ID for handling property synchronization
+            </summary>
+        </member>
+        <member name="F:Igor.TCP.DataIDs.ClientInformationID">
+            <summary>
+            Packet ID for sending client information to the other side
             </summary>
         </member>
         <member name="F:Igor.TCP.DataIDs.CLIENT_IDENTIFICATION_COMPLEXITY">
@@ -124,23 +119,44 @@
             Remove previously registered custom packet by 'ID'
             </summary>
         </member>
-        <member name="T:Igor.TCP.Helper">
+        <member name="T:Igor.TCP.PacketReceivedEventArgs`1">
             <summary>
-            Static class constainging useful methods for data transimission
+            Predefined packets data holder
             </summary>
         </member>
-        <member name="M:Igor.TCP.Helper.GetActivePIv4Address">
+        <member name="P:Igor.TCP.PacketReceivedEventArgs`1.data">
+            <summary>
+            Received data
+            </summary>
+        </member>
+        <member name="P:Igor.TCP.PacketReceivedEventArgs`1.clientID">
+            <summary>
+            Packet origin
+            </summary>
+        </member>
+        <member name="T:Igor.TCP.Helper">
+            <summary>
+            Static class containing useful methods for data transmission
+            </summary>
+        </member>
+        <member name="M:Igor.TCP.Helper.GetActiveIPv4Address">
             <summary>
             Returns active IPv4 Address of this computer
             </summary>
-            <returns></returns>
+            <exception cref="T:System.Net.WebException"></exception>
         </member>
-        <member name="M:Igor.TCP.Helper.GetBytesFromObject``1(System.Object)">
+        <member name="M:Igor.TCP.Helper.GetBytesFromObject(System.Object)">
             <summary>
             Wrapper to all object to byte[] conversions
+            <para>WARNING! When serializing/deserializing custom structures the name-space has to match on both ends!</para> 
             </summary>
         </member>
-        <member name="M:Igor.TCP.Helper.GetBytesFromObject``1(System.Byte,System.Object)">
+        <member name="M:Igor.TCP.Helper.GetObject(System.Type,System.Byte[])">
+            <summary>
+            Objects have to be in the same name-space in order to return an actual object, otherwise a byte[] is returned!
+            </summary>
+        </member>
+        <member name="M:Igor.TCP.Helper.GetBytesFromObject(System.Byte,System.Object)">
             <summary>
             Wrapper to all object to byte[] conversions, includes request ID 'customID' as first element of the array
             </summary>
@@ -160,14 +176,24 @@
             Get response type of custom defined packet 'ID'
             </summary>
         </member>
+        <member name="T:Igor.TCP.TCPClient">
+            <summary>
+            Client that can connect to a TCPServer
+            </summary>
+        </member>
+        <member name="P:Igor.TCP.TCPClient.clientInfo">
+            <summary>
+            Information about this client
+            </summary>
+        </member>
         <member name="P:Igor.TCP.TCPClient.getConnection">
             <summary>
-            Get connection to the server, allows client to server comunication, holds send and receiove functionality
+            Get connection to the server, allows client to server communication, holds send and receive functionality
             </summary>
         </member>
         <member name="P:Igor.TCP.TCPClient.responseHandler">
             <summary>
-            Access to datatypes for custom packets
+            Access to data-types for custom packets
             </summary>
         </member>
         <member name="P:Igor.TCP.TCPClient.clientID">
@@ -175,19 +201,37 @@
             Get ID this client was assigned by the server
             </summary>
         </member>
+        <member name="P:Igor.TCP.TCPClient.debugPrints">
+            <summary>
+            Log debug information into the console
+            </summary>
+        </member>
         <member name="M:Igor.TCP.TCPClient.#ctor(System.String,System.UInt16)">
             <summary>
             Initialize new TCPClient by connecting to 'ipAddress' on port 'port'
             </summary>
+            <exception cref="T:System.Net.WebException"></exception>
         </member>
         <member name="M:Igor.TCP.TCPClient.#ctor(Igor.TCP.ConnectionData)">
             <summary>
             Initialize new TCPClient by connecting to a server defined in 'data'
             </summary>
+            <exception cref="T:System.Net.WebException"></exception>
+        </member>
+        <member name="M:Igor.TCP.TCPClient.Connect">
+            <summary>
+            Connect to server with specified IP and port
+            </summary>
+        </member>
+        <member name="M:Igor.TCP.TCPClient.SetUpClientInfo(System.String)">
+            <summary>
+            Quick setup of client meta-data
+            </summary>
+            <param name="clientName">If left empty Current user name is used</param>
         </member>
         <member name="M:Igor.TCP.TCPClient.SetListeningForData(System.Byte,System.Boolean)">
             <summary>
-            Set listening for incomming data from connected client 'clientID'
+            Set listening for incoming data from connected client 'clientID'
             </summary>
         </member>
         <member name="M:Igor.TCP.TCPClient.SyncPropery(System.Object,System.String,System.Byte)">
@@ -197,17 +241,17 @@
         </member>
         <member name="M:Igor.TCP.TCPClient.UpdateProp(System.Byte,System.Object)">
             <summary>
-            NIY, no guarantee of safety/funcionality when using this
+            NIY, no guarantee of safety/functionality when using this
             </summary>
         </member>
         <member name="M:Igor.TCP.TCPClient.DefineTwoWayComuncation``1(System.Byte,System.Func{``0})">
             <summary>
-            NIY, no guarantee of safety/funcionality when using this
+            Shorthand for <see cref="M:Igor.TCP.TCPClient.DefineRequestEntry``1(System.Byte)"/> and <see cref="M:Igor.TCP.TCPClient.DefineResponseEntry``1(System.Byte,System.Func{``0})"/>, transmission like.
             </summary>
         </member>
         <member name="M:Igor.TCP.TCPClient.CancelTwoWayComunication(System.Byte)">
             <summary>
-            NIY, no guarantee of safety when using this TODO
+            Shorthand for <see cref="M:Igor.TCP.TCPClient.CancelRequestID(System.Byte)"/> and <see cref="M:Igor.TCP.TCPClient.CancelResponseID(System.Byte)"/>, transmission like.
             </summary>
         </member>
         <member name="M:Igor.TCP.TCPClient.DefineRequestEntry``1(System.Byte)">
@@ -235,22 +279,37 @@
             Raises a new request with 'ID' and sends response via 'OnRequestHandeled' event
             </summary>
         </member>
-        <member name="T:Igor.TCP.TCPClientInfo">
+        <member name="M:Igor.TCP.TCPClient.Disconnect">
             <summary>
-            INY
+            Disconnect from current server
             </summary>
         </member>
-        <member name="F:Igor.TCP.TCPClientInfo.isServer">
+        <member name="T:Igor.TCP.TCPClientInfo">
+            <summary>
+            Basic information about this client, can be sent to sever
+            </summary>
+        </member>
+        <member name="P:Igor.TCP.TCPClientInfo.isServer">
             <summary>
             Is current client playing the role of the server
             </summary>
         </member>
-        <member name="F:Igor.TCP.TCPClientInfo.clientAddress">
+        <member name="P:Igor.TCP.TCPClientInfo.clientAddress">
             <summary>
             Address of current instance
             </summary>
         </member>
-        <member name="M:Igor.TCP.TCPClientInfo.#ctor(System.Boolean,System.Net.IPAddress)">
+        <member name="P:Igor.TCP.TCPClientInfo.computerName">
+            <summary>
+            The name of connected client, if not set up users computer name is used.
+            </summary>
+        </member>
+        <member name="P:Igor.TCP.TCPClientInfo.clientID">
+            <summary>
+            The ID assigned from server<para>Value 255 is invalid/not yet assigned!</para> 
+            </summary>
+        </member>
+        <member name="M:Igor.TCP.TCPClientInfo.#ctor(System.String,System.Boolean,System.Net.IPAddress)">
             <summary>
             Initialize new ClientInfo
             </summary>
@@ -262,22 +321,22 @@
         </member>
         <member name="F:Igor.TCP.TCPConnection.stream">
             <summary>
-            Stream on which all transimssion happens
+            Stream on which all transmission happens
             </summary>
         </member>
         <member name="P:Igor.TCP.TCPConnection.listeningForData">
             <summary>
-            Is client listening for incomming data
+            Is client listening for incoming data
+            </summary>
+        </member>
+        <member name="P:Igor.TCP.TCPConnection.sendingData">
+            <summary>
+            Is client actively trying to send data
             </summary>
         </member>
         <member name="P:Igor.TCP.TCPConnection.debugPrints">
             <summary>
             Print debug information to console
-            </summary>
-        </member>
-        <member name="E:Igor.TCP.TCPConnection.OnTCPDataReceived">
-            <summary>
-            Called when successfully received data from <see cref="F:Igor.TCP.DataIDs.TCPDataID"></see> marked packet
             </summary>
         </member>
         <member name="E:Igor.TCP.TCPConnection.OnStringReceived">
@@ -292,17 +351,12 @@
         </member>
         <member name="P:Igor.TCP.TCPConnection.responseHandler">
             <summary>
-            Access to datatypes for custom packets
+            Access to data types for custom packets
             </summary>
         </member>
         <member name="P:Igor.TCP.TCPConnection.dataIDs">
             <summary>
-            Define simple data packets and get internal/externaly defined packet IDs
-            </summary>
-        </member>
-        <member name="M:Igor.TCP.TCPConnection.SendData(Igor.TCP.TCPData)">
-            <summary>
-            Send TCPData to connected device
+            Define simple data packets and get internal/externally defined packet IDs
             </summary>
         </member>
         <member name="M:Igor.TCP.TCPConnection.SendData(System.String)">
@@ -322,12 +376,17 @@
         </member>
         <member name="M:Igor.TCP.TCPConnection.SendData(System.Byte,System.Byte,System.Byte[])">
             <summary>
-             Sends packet with id 'packetID' and additional byte 'requestID' ad a first elemtent of inner array of 'requestID' and 'data'
+             Sends packet with id 'packetID' and additional byte 'subPacketID' as a first element of inner array of 'subPacketID' and 'data'
             </summary>
         </member>
         <member name="M:Igor.TCP.TCPConnection.SendData(System.Byte,System.Byte[])">
             <summary>
-            Main Send fuction, send byte[] of 'data' with packet ID 'packetID'
+            Main Send function, send byte[] of 'data' with packet ID 'packetID'
+            </summary>
+        </member>
+        <member name="M:Igor.TCP.TCPConnection.SendUserDefinedData(System.Byte,System.Byte[])">
+            <summary>
+            Send user defined byte[] 'data' with 'dataID' as the first element, sent via <see cref="F:Igor.TCP.DataIDs.UserDefined"/> packet ID
             </summary>
         </member>
         <member name="M:Igor.TCP.TCPConnection.Dispose(System.Boolean)">
@@ -335,44 +394,14 @@
             Dispose of the object
             </summary>
         </member>
-        <member name="M:Igor.TCP.TCPConnection.Finalize">
-            <summary>
-            Finalizer
-            </summary>
-        </member>
         <member name="M:Igor.TCP.TCPConnection.Dispose">
             <summary>
             Dispose of the object
             </summary>
         </member>
-        <member name="T:Igor.TCP.TCPData">
-            <summary>
-            Data used for Purchse transmission
-            </summary>
-        </member>
-        <member name="M:Igor.TCP.TCPData.#ctor(System.Collections.Generic.List{Igor.TCP.Item},Igor.TCP.PurchaseMeta)">
-            <summary>
-            Get new TCPData
-            </summary>
-        </member>
-        <member name="M:Igor.TCP.TCPData.#ctor(Igor.TCP.Item[],Igor.TCP.PurchaseMeta)">
-            <summary>
-            Get new TCPData
-            </summary>
-        </member>
-        <member name="P:Igor.TCP.TCPData.items">
-            <summary>
-            Items purchased
-            </summary>
-        </member>
-        <member name="P:Igor.TCP.TCPData.meta">
-            <summary>
-            Purchase information
-            </summary>
-        </member>
         <member name="T:Igor.TCP.Item">
             <summary>
-            Simgle Item from a shop
+            Single Item from a shop
             </summary>
         </member>
         <member name="M:Igor.TCP.Item.#ctor(System.String,System.Int32)">
@@ -433,7 +462,7 @@
         </member>
         <member name="T:Igor.TCP.TCPResponse">
             <summary>
-            Class conatinging response data to raised request
+            Class containing response data to raised request
             </summary>
         </member>
         <member name="M:Igor.TCP.TCPResponse.#ctor(System.Byte,System.Byte[])">
@@ -453,17 +482,27 @@
         </member>
         <member name="P:Igor.TCP.TCPResponse.packetID">
             <summary>
-            Represents userdefined ID for data reception
+            Represents user defined ID for data reception
             </summary>
         </member>
         <member name="T:Igor.TCP.TCPServer">
             <summary>
-            TCP Server
+            TCP Server, accepts client connections
+            </summary>
+        </member>
+        <member name="F:Igor.TCP.TCPServer.ServerPacketOrigin">
+            <summary>
+            Used by packets coming from the server TODO
             </summary>
         </member>
         <member name="E:Igor.TCP.TCPServer.OnConnectionEstablished">
             <summary>
             Called when client connects to this server
+            </summary>
+        </member>
+        <member name="E:Igor.TCP.TCPServer.OnClientDisconnected">
+            <summary>
+            Called when client disconnects from this server
             </summary>
         </member>
         <member name="M:Igor.TCP.TCPServer.Start(System.UInt16)">
@@ -476,15 +515,22 @@
             Start server using specified 'port' and explicitly specified 'ipAddress'
             </summary>
         </member>
+        <member name="M:Igor.TCP.TCPServer.Start(System.Net.IPAddress,System.UInt16)">
+            <summary>
+            Start server using specified 'port' and explicitly specified 'ipAddress'
+            </summary>
+        </member>
         <member name="M:Igor.TCP.TCPServer.GetConnection(System.Byte)">
             <summary>
             Get client connection by ID
             </summary>
+            <exception cref="T:System.NullReferenceException"></exception>
         </member>
         <member name="M:Igor.TCP.TCPServer.GetConnection(System.Net.IPAddress)">
             <summary>
             Get client connection by IP address
             </summary>
+            <exception cref="T:System.NullReferenceException"></exception>
         </member>
         <member name="P:Igor.TCP.TCPServer.getConnectedClients">
             <summary>
@@ -493,58 +539,80 @@
         </member>
         <member name="M:Igor.TCP.TCPServer.SetListeningForData(System.Byte,System.Boolean)">
             <summary>
-            Set listening for incomming data from connected client 'clientID'
+            Set listening for incoming data from connected client 'clientID'
             </summary>
+            <exception cref="T:System.NullReferenceException"></exception>
         </member>
         <member name="M:Igor.TCP.TCPServer.SetIncommingClientConnection(System.Boolean)">
             <summary>
-            Set listening for incomming client connection attempts
+            Set listening for incoming client connection attempts
             </summary>
         </member>
         <member name="M:Igor.TCP.TCPServer.SyncPropery``1(System.Byte,System.Object,``0,System.Byte)">
             <summary>
             Define 'propID' for synchronization of public property for client 'clientID' named 'propetyName' from instance of a class 'instance', publish changes by calling UpdateProp()
             </summary>
+            <exception cref="T:System.NullReferenceException"></exception>
         </member>
         <member name="M:Igor.TCP.TCPServer.UpdateProp(System.Byte,System.Byte,System.Object)">
             <summary>
             Sends updated property value to connected 'clientID' with property id 'ID' and set value;
             </summary>
+            <exception cref="T:System.NullReferenceException"></exception>
         </member>
         <member name="M:Igor.TCP.TCPServer.DefineTwoWayComunication``1(System.Byte,System.Byte,System.Func{``0})">
             <summary>
             Shorthand for Request and response id definition, when both sides are senders 
             </summary>
+            <exception cref="T:System.NullReferenceException"></exception>
         </member>
         <member name="M:Igor.TCP.TCPServer.CancelTwoWayComunication(System.Byte,System.Byte)">
             <summary>
-            Cancel two way comunication for client 'clientID' with id 'ID'
+            Cancel two way communication for client 'clientID' with id 'ID'
             </summary>
+            <exception cref="T:System.NullReferenceException"></exception>
         </member>
         <member name="M:Igor.TCP.TCPServer.DefineRequestEntry``1(System.Byte,System.Byte)">
             <summary>
             Define custom request by specifying its 'TData' type with selected 'ID'
             </summary>
+            <exception cref="T:System.NullReferenceException"></exception>
         </member>
         <member name="M:Igor.TCP.TCPServer.CancelRequestID(System.Byte,System.Byte)">
             <summary>
             Cancel custom request of 'TData' under 'ID'
             </summary>
+            <exception cref="T:System.NullReferenceException"></exception>
         </member>
         <member name="M:Igor.TCP.TCPServer.DefineResponseEntry``1(System.Byte,System.Byte,System.Func{``0})">
             <summary>
             Define response 'function' to be called when request packet with 'ID' is received
             </summary>
+            <exception cref="T:System.NullReferenceException"></exception>
         </member>
         <member name="M:Igor.TCP.TCPServer.CancelResponseID(System.Byte,System.Byte)">
             <summary>
             Cancel response to request with 'ID'
+            </summary>
+            <exception cref="T:System.NullReferenceException"></exception>
+        </member>
+        <member name="M:Igor.TCP.TCPServer.DefineRerouteID(System.Byte,System.Byte,System.Byte,System.Nullable{System.Byte})">
+            <summary>
+            Define rerouting of all packets from 'fromClient' coming to this server to under 'packetID' to be sent to 'toClient'
+            <para>If 'dataID' is provided, 'packetID' is replaced by <see cref="F:Igor.TCP.DataIDs.UserDefined"/> constant value.</para>
             </summary>
         </member>
         <member name="M:Igor.TCP.TCPServer.RaiseRequestAsync(System.Byte,System.Byte)">
             <summary>
             Raises a new request with 'ID' and sends response via 'OnRequestHandeled' event
             </summary>
+            <exception cref="T:System.NullReferenceException"></exception>
+        </member>
+        <member name="M:Igor.TCP.TCPServer.SendToAll``1(System.Byte,``0)">
+            <summary>
+            Send 'data' to all connected clients, sent under <see cref="F:Igor.TCP.DataIDs.UserDefined"/> packet.
+            </summary>
+            <exception cref="T:Igor.TCP.UndefinedPacketException"></exception>
         </member>
     </members>
 </doc>

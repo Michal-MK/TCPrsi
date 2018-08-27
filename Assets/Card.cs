@@ -23,13 +23,19 @@ public class Card : MonoBehaviour, IEndDragHandler {
 		Zaludy
 	}
 
-	public GameManager manager;
-	public SpriteRenderer myRenderer;
 	public Sprite face;
 	public Sprite cover;
-	private bool isFaceUp;
-	new public BoxCollider2D collider;
+
+	public SpriteRenderer myRenderer;
+	public BoxCollider2D myCollider;
+
+	public GameManager manager;
 	public Player currentOwner;
+
+	private bool isFaceUp;
+
+	public CardValue cardValue { get; private set; }
+	public CardColor cardColor { get; set; }
 
 	public bool IsFaceUp {
 		get {
@@ -46,12 +52,9 @@ public class Card : MonoBehaviour, IEndDragHandler {
 		}
 	}
 
-	public CardValue cardValue { get; private set; }
-	public CardColor cardColor { get; set; }
-
 	public void Initialise(CardValue cV, CardColor cC) {
 		myRenderer = GetComponent<SpriteRenderer>();
-		collider = GetComponent<BoxCollider2D>();
+		myCollider = GetComponent<BoxCollider2D>();
 
 		cardValue = cV;
 		cardColor = cC;
@@ -64,29 +67,28 @@ public class Card : MonoBehaviour, IEndDragHandler {
 	}
 
 	public void Drag() {
-		gameObject.transform.position = (Vector2)Camera.main.ScreenToWorldPoint(Input.mousePosition);
+		transform.position = (Vector2)Camera.main.ScreenToWorldPoint(Input.mousePosition);
 	}
 
 	public void MoveToTalon() {
-		gameObject.GetComponent<RectTransform>().position = manager.talonPlace;
+		transform.position = manager.talonPlaceTransform.position;
 		transform.rotation = Quaternion.Euler(0, 0, UnityEngine.Random.Range(0f, 360f));
-		collider.enabled = false;
+		myCollider.enabled = false;
 		IsFaceUp = true;
 	}
 
 	public void MoveToDeck() {
-		gameObject.GetComponent<RectTransform>().position = manager.deckPlace;
+		transform.position = manager.deckPlaceTransform.position;
 		transform.rotation = Quaternion.identity;
-		collider.enabled = false;
+		myCollider.enabled = false;
 		IsFaceUp = false;
 	}
-
 
 	public void OnEndDrag(PointerEventData eventData) {
 		RaycastHit2D[] hits = Physics2D.RaycastAll(eventData.pointerCurrentRaycast.worldPosition, eventData.pointerCurrentRaycast.worldNormal);
 
 		foreach (RaycastHit2D hit2D in hits) {
-			if (hit2D.transform.name == "TalonCollider") {
+			if (hit2D.transform.name == "_TalonCollider" && currentOwner.controlledByLocal == true) {
 				currentOwner.Play(this);
 				return;
 			}

@@ -2,87 +2,87 @@
 using UnityEngine;
 using System;
 using Igor.TCP;
+using static Structs;
 
 public class GameManager : MonoBehaviour {
 
 	public static event EventHandler<Player> OnTurnBegin;
 
 	public Deck deckManager;
-	public List<Player> players;
+	public List<Player> players; //Server
 	public int turnCounter;
 	public GameObject playerPrefab;
-	public Vector3 talonPlace;
-	public Vector3 deckPlace;
 
-	public Connection connectionManager;
-	public Server serverManager;
-	public Client clientManager;
-	
+	public InfoDisplayer display;
+	public Controls controls;
 
-	void Start () {
-		connectionManager = GameObject.Find("ConnectionGO").GetComponent<Connection>();
-		if (connectionManager.isServer) {
-			serverManager = GameObject.Find("ConnectionGO").GetComponent<Server>();
-			players.Add(AddPlayer(0));
-			deckPlace = new Vector3(5, 0, 0); //TODO
-			talonPlace = new Vector3(-5, 0, 0); //TODO
-			Connection.InitialData data = new Connection.InitialData(deckManager.Initialise());
-			serverManager.SendInitialData(data);
+	public Transform deckPlaceTransform;
+	public Transform talonPlaceTransform;
 
-			Player.OnEndTurn += PlayerTurnFinished;
-			Player.OnVictory += VictoryHandling;
-
-			OnTurnBegin?.Invoke(this, players[0]);
-			foreach (ConnectionInfo info in serverManager.server.getConnectedClients) {
-				players.Add(AddPlayer(info.connectionID + 1));
+	private Client client;
 
 
-			}
-			foreach (Player player in players) {
-				OnTurnBegin?.Invoke(this, player);
-				player.Draw(4);
-			}
+	public bool AceState;
+	public int SevenState;
+
+
+	public bool gameBegan = false;
+
+	public void Initialise(InitialData data, Client client) {
+		this.client = client;
+		Player.OnEndTurn += PlayerTurnFinished;
+		Player.OnVictory += VictoryHandling;
+		deckManager.Initialise(Extensions.Invert(data.cards));
+
+		foreach (byte id in data.players.Keys) {
+			players.Add(AddPlayer(id, data.players[id]));
 		}
-		else if(connectionManager.isServer == false) {
-			clientManager = GameObject.Find("ConnectionGO").GetComponent<Client>();
-			players.Add(AddPlayer(0));
-			deckPlace = new Vector3(5, 0, 0); //TODO
-			talonPlace = new Vector3(-5, 0, 0); //TODO
-
-			deckManager.Initialise(Extensions.Invert(clientManager.dataForInitialisation.cards));
-			Player.OnEndTurn += PlayerTurnFinished;
-			Player.OnVictory += VictoryHandling;
-			foreach (Player player in players) {
-				OnTurnBegin?.Invoke(this, player);
-				player.Draw(4);
-			}
-
-
-			OnTurnBegin?.Invoke(this, players[0]);
+		foreach (Player player in players) {
+			OnTurnBegin?.Invoke(this, player);
+			player.Draw(4);
 		}
-		
+
+		gameBegan = true;
+		OnTurnBegin?.Invoke(this, players[0]);
 	}
 
-	private Player AddPlayer(int index) {
-		GameObject newPlayer = Instantiate(playerPrefab);
-		Player playerScript = newPlayer.GetComponent<Player>();
-		playerScript.index = index;
-		playerScript.manager = this;
-		playerScript.Initialise();
-		return playerScript;
+	private void OnDestroy() {
+		Player.OnEndTurn -= PlayerTurnFinished;
+		Player.OnVictory -= VictoryHandling;
 	}
-	
+
+	private Player AddPlayer(byte index, string playerName) {
+		Player newPlayer = Instantiate(playerPrefab).GetComponent<Player>();
+		newPlayer.Initialise(index, playerName, this);
+		return newPlayer;
+	}
+
 	private void VictoryHandling(object sender, Player winner) {
 		Debug.Log("The winner is " + winner.name);
+
+		client.client.getConnection.SendData(Constants.GameOverIdentifier);
+
 	}
 
 	private void PlayerTurnFinished(object sender, Player player) {
-		turnCounter += 1;
-		if (turnCounter == players.Count) {
-			turnCounter = 0;
-		}
-		OnTurnBegin?.Invoke(this,players[turnCounter]);
-
+		turnCounter = (turnCounter == players.Count - 1) ? 0 : turnCounter + 1;
+		OnTurnBegin?.Invoke(this, players[turnCounter]);
 	}
 
+	public void SendCardDrawn(DrawCardAction action) {
+		client.client.getConnection.SendUserDefinedData(DrawPacketId, Helper.GetBytesFromObject(action));
+	}
+
+	public void SendCardPlayed(PlayCardAction action) {
+		client.client.getConnection.SendUserDefinedData(PlayCardPacketId, Helper.GetBytesFromObject(action));
+	}
+
+	public void SendExtraAction(ExtraCardArgs action) {
+		client.client.getConnection.SendUserDefinedData(ExtraCardArgsPacketId, Helper.GetBytesFromObject(action));
+	}
+
+
+	public void ShowSelectedColor(Card.CardColor color) {
+		display.DisplayColor(color);
+	}
 }

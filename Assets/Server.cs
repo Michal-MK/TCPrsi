@@ -1,37 +1,88 @@
 ﻿using UnityEngine;
 using System.Collections;
 using Igor.TCP;
+using System.Collections.Generic;
+using System;
+using UnityEngine.SceneManagement;
 
-public class Server : Connection {
+public class Server : MonoBehaviour {
 	public TCPServer server;
+	public Dictionary<byte, string> players = new Dictionary<byte, string>();
+	private LobbyManager lm;
 
-	public void Start() {
-		base.AssignAsServer(true);
+	public void Initialise(LobbyManager lm, ushort port) {
+		this.lm = lm;
+		
+		
 		server = new TCPServer();
-		server.Start(25565);
+		server.Start(port);
 		server.OnConnectionEstablished += Server_OnConnectionEstablished;
+		DontDestroyOnLoad(gameObject);
+	}
+
+	public void StartGame(bool firstTime = true) {
+		if (firstTime) {
+			SetUpTransmissionIds();
+		}
+		
+		Structs.InitialData data = new Structs.InitialData(lm.GenerateCardInfo(), players);
+		foreach (byte id in players.Keys) {
+			server.GetConnection(id).SendUserDefinedData(Structs.InitialPacketId, Helper.GetBytesFromObject(data));
+		}
+
 	}
 
 	private void Server_OnConnectionEstablished(object sender, ClientConnectedEventArgs e) {
-		lm.Print(e.connInfo.connectedAddress + " has connected");
-		server.GetConnection(e.connInfo.connectionID).OnStringReceived += OnStringReceived;
+		players.Add(e.clientInfo.clientID, e.clientInfo.computerName);
+		server.GetConnection(e.clientInfo.clientID).OnStringReceived += OnStringReceived;
+		server.GetConnection(e.clientInfo.clientID).OnInt64Received += Server_OnInt64Received;
+		lm.Print(e.clientInfo.computerName);
 
 	}
 
-	public override void SendString(string s) {
-		server.GetConnection(0).SendData(s);
-	}
-
-	// Update is called once per frame
-	public override void SetUpTransmissionIds() {
-		foreach (ConnectionInfo connectionInfo in server.getConnectedClients) {
-			server.GetConnection(connectionInfo.connectionID).dataIDs.DefineCustomDataTypeForID<InitialData>(initialPacketId, null);
+	private void Server_OnInt64Received(object sender, PacketReceivedEventArgs<long> e) {
+		if(e.data == 1) {
+			StartGame(false);
 		}
 	}
 
-	public void SendInitialData(InitialData data) {
-		foreach (ConnectionInfo connectionInfo in server.getConnectedClients) {
-			server.GetConnection(connectionInfo.connectionID).SendData(DataIDs.UserDefined, Helper.GetBytesFromObject<InitialData>(base.initialPacketId, data));
+	private void OnStringReceived(object sender, PacketReceivedEventArgs<string> e) {
+		foreach (TCPClientInfo connectionInfo in server.getConnectedClients) {
+			server.GetConnection(connectionInfo.clientID).SendData(connectionInfo.computerName + ": " + e.data);
+		}
+	}
+
+	public void SetUpTransmissionIds() {
+		foreach (TCPClientInfo connectionInfo in server.getConnectedClients) {
+			DataIDs dataIDs = server.GetConnection(connectionInfo.clientID).dataIDs;
+			dataIDs.DefineCustomDataTypeForID<Structs.InitialData>(Structs.InitialPacketId, null);
+			dataIDs.DefineCustomDataTypeForID<Structs.PlayCardAction>(Structs.PlayCardPacketId, OnPlayCardPacketReceived);
+			dataIDs.DefineCustomDataTypeForID<Structs.DrawCardAction>(Structs.DrawPacketId, OnDrawCardPacketReceived);
+			dataIDs.DefineCustomDataTypeForID<Structs.ExtraCardArgs>(Structs.ExtraCardArgsPacketId, OnExtraCardArgsPacketReceived);
+		}
+	}
+
+	public void OnPlayCardPacketReceived(Structs.PlayCardAction data) {
+		foreach (byte id in players.Keys) {
+			if (id != data.playerId) {
+				server.GetConnection(id).SendUserDefinedData(Structs.PlayCardPacketId, Helper.GetBytesFromObject(data));
+			}
+		}
+	}
+
+	private void OnDrawCardPacketReceived(Structs.DrawCardAction data) {
+		foreach (byte id in players.Keys) {
+			if (id != data.playerId) {
+				server.GetConnection(id).SendUserDefinedData(Structs.DrawPacketId, Helper.GetBytesFromObject(data));
+			}
+		}
+	}
+
+	private void OnExtraCardArgsPacketReceived(Structs.ExtraCardArgs data) {
+		foreach (byte id in players.Keys) {
+			if (id != data.playerId) {
+				server.GetConnection(id).SendUserDefinedData(Structs.ExtraCardArgsPacketId, Helper.GetBytesFromObject(data));
+			}
 		}
 	}
 }

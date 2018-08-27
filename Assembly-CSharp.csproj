@@ -9,7 +9,7 @@
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <RootNamespace></RootNamespace>
-    <ProjectGuid>{45E24607-2BE9-2FD6-1533-E0C232D8E488}</ProjectGuid>
+    <ProjectGuid>{88DDEE4A-5F2C-C173-69A3-B60125182EB2}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AssemblyName>Assembly-CSharp</AssemblyName>
@@ -62,14 +62,17 @@
   <ItemGroup>
     <Compile Include="Assets\Card.cs" />
     <Compile Include="Assets\Client.cs" />
-    <Compile Include="Assets\Connection.cs" />
+    <Compile Include="Assets\Constants.cs" />
     <Compile Include="Assets\Controls.cs" />
     <Compile Include="Assets\Deck.cs" />
     <Compile Include="Assets\Extensions.cs" />
     <Compile Include="Assets\GameManager.cs" />
+    <Compile Include="Assets\InfoDisplayer.cs" />
     <Compile Include="Assets\LobbyManager.cs" />
     <Compile Include="Assets\Player.cs" />
     <Compile Include="Assets\Server.cs" />
+    <Compile Include="Assets\Structs.cs" />
+    <Compile Include="Assets\SynchronizationException.cs" />
     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMP_SDF-Surface-Mobile.shader" />
     <None Include="Assets\TextMesh Pro\Resources\LineBreaking Leading Characters.txt" />
     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMPro_Properties.cginc" />
@@ -88,16 +91,16 @@
     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMP_Sprite.shader" />
     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMP_SDF-Surface.shader" />
     <Reference Include="UnityEditor.StandardEvents">
-      <HintPath>C:/Users/Slinta/Documents/TCPrší/Library/ScriptAssemblies/UnityEditor.StandardEvents.dll</HintPath>
+      <HintPath>C:/Users/Slinta/Documents/TCPrsi/Library/ScriptAssemblies/UnityEditor.StandardEvents.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro.Editor">
-      <HintPath>C:/Users/Slinta/Documents/TCPrší/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
+      <HintPath>C:/Users/Slinta/Documents/TCPrsi/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.PackageManagerUI.Editor">
-      <HintPath>C:/Users/Slinta/Documents/TCPrší/Library/ScriptAssemblies/Unity.PackageManagerUI.Editor.dll</HintPath>
+      <HintPath>C:/Users/Slinta/Documents/TCPrsi/Library/ScriptAssemblies/Unity.PackageManagerUI.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>C:/Users/Slinta/Documents/TCPrší/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
+      <HintPath>C:/Users/Slinta/Documents/TCPrsi/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AIModule">
       <HintPath>D:/Programy/Unity_veci/Unity/Editor/Data/Managed/UnityEngine/UnityEngine.AIModule.dll</HintPath>
@@ -295,7 +298,7 @@
       <HintPath>D:/Programy/Unity_veci/Unity/Editor/Data/UnityExtensions/Unity/UnitySpatialTracking/RuntimeEditor/UnityEngine.SpatialTracking.dll</HintPath>
     </Reference>
     <Reference Include="SimpleTCP">
-      <HintPath>C:/Users/Slinta/Documents/TCPrší/Assets/Plugins/SimpleTCP.dll</HintPath>
+      <HintPath>C:/Users/Slinta/Documents/TCPrsi/Assets/Plugins/SimpleTCP.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Analytics">
       <HintPath>C:/Users/Slinta/AppData/Local/Unity/cache/packages/packages.unity.com/com.unity.analytics@2.0.16/UnityEngine.Analytics.dll</HintPath>
