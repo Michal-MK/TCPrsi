@@ -20,11 +20,14 @@ public class GameManager : MonoBehaviour {
 	public Transform talonPlaceTransform;
 
 	private Client client;
+	public byte localId;
+	private float localDownOffset;
 
 
 	public bool AceState;
 	public int SevenState;
 
+	public float cameraWidth;
 
 	public bool gameBegan = false;
 
@@ -33,15 +36,24 @@ public class GameManager : MonoBehaviour {
 		Player.OnEndTurn += PlayerTurnFinished;
 		Player.OnVictory += VictoryHandling;
 		deckManager.Initialise(Extensions.Invert(data.cards));
+		localId = client.client.clientID;
+
+		localDownOffset = -Mathf.PI / 2 + (- localId + data.players.Count) * ((2 * Mathf.PI) / (data.players.Count));
+
+		Camera.main.orthographicSize = Constants.OverlapPreventionDistance + Constants.HalfCardLenght * 2 + Constants.MiddleRadius;
+		cameraWidth = Camera.main.orthographicSize * 2 * Camera.main.aspect;
+
 
 		foreach (byte id in data.players.Keys) {
-			players.Add(AddPlayer(id, data.players[id]));
+			players.Add(AddPlayer(id, data.players[id], (byte)data.players.Count));
+
 		}
+		display.InstantiateTurnIndicators(players.ToArray());
 		foreach (Player player in players) {
 			OnTurnBegin?.Invoke(this, player);
 			player.Draw(4);
 		}
-
+		
 		gameBegan = true;
 		OnTurnBegin?.Invoke(this, players[0]);
 	}
@@ -51,8 +63,10 @@ public class GameManager : MonoBehaviour {
 		Player.OnVictory -= VictoryHandling;
 	}
 
-	private Player AddPlayer(byte index, string playerName) {
+	private Player AddPlayer(byte index, string playerName, byte numPlayers) {
 		Player newPlayer = Instantiate(playerPrefab).GetComponent<Player>();
+		newPlayer.angle = localDownOffset + (index * ((2 * Mathf.PI) / numPlayers));
+		newPlayer.distance = Constants.HalfCardLenght + Constants.OverlapPreventionDistance + Constants.MiddleRadius;
 		newPlayer.Initialise(index, playerName, this);
 		return newPlayer;
 	}

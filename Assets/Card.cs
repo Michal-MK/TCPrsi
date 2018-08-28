@@ -73,6 +73,7 @@ public class Card : MonoBehaviour, IEndDragHandler {
 	public void MoveToTalon() {
 		transform.position = manager.talonPlaceTransform.position;
 		transform.rotation = Quaternion.Euler(0, 0, UnityEngine.Random.Range(0f, 360f));
+		transform.localScale = Vector3.one;
 		myCollider.enabled = false;
 		IsFaceUp = true;
 	}
