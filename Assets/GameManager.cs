@@ -83,6 +83,9 @@ public class GameManager : MonoBehaviour {
 		client.client.getConnection.SendUserDefinedData(ExtraCardArgsPacketId, Helper.GetBytesFromObject(action));
 	}
 
+	public void SendCardPositions(CardPositionSyncPacket action) {
+		client.client.getConnection.SendUserDefinedData(CardPosSyncId, Helper.GetBytesFromObject(action));
+	}
 
 	public void ShowSelectedColor(Card.CardColor color) {
 		display.DisplayColor(color);
