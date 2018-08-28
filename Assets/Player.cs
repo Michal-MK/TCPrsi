@@ -167,6 +167,18 @@ public class Player : MonoBehaviour {
 		}
 	}
 
+	public void ArrangeCards(SupportingStructs.CardPositionSync[] cardPositions) {
+		for (int i = 0; i < hand.Count; i++) {
+			if (index == 0) {
+				hand[i].transform.position = new Vector2(-11 + i * 2, -7f);
+			}
+			else {
+				hand[i].transform.position = cardPositions[i].position;
+			}
+			hand[i].myRenderer.sortingOrder = i;
+		}
+	}
+
 	public void GetColorInput() {
 		Controls.OnColorSelected += ColorSelected;
 		manager.controls.colorSelector.SetActive(true);

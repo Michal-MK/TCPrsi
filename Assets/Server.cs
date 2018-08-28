@@ -59,6 +59,15 @@ public class Server : MonoBehaviour {
 			dataIDs.DefineCustomDataTypeForID<Structs.PlayCardAction>(Structs.PlayCardPacketId, OnPlayCardPacketReceived);
 			dataIDs.DefineCustomDataTypeForID<Structs.DrawCardAction>(Structs.DrawPacketId, OnDrawCardPacketReceived);
 			dataIDs.DefineCustomDataTypeForID<Structs.ExtraCardArgs>(Structs.ExtraCardArgsPacketId, OnExtraCardArgsPacketReceived);
+			dataIDs.DefineCustomDataTypeForID<Structs.CardPositionSyncPacket>(Structs.CardPosSyncId, OnCardPositionPacketReceived);
+		}
+	}
+
+	private void OnCardPositionPacketReceived(Structs.CardPositionSyncPacket data) {
+		foreach (byte id in players.Keys) {
+			if (id != data.playerId) {
+				server.GetConnection(id).SendUserDefinedData(Structs.CardPosSyncId, Helper.GetBytesFromObject(data));
+			}
 		}
 	}
 

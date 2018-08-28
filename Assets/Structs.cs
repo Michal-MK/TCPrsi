@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class Structs {
 
@@ -6,6 +7,7 @@ public class Structs {
 	public const byte PlayCardPacketId = 4;
 	public const byte DrawPacketId = 5;
 	public const byte ExtraCardArgsPacketId = 6;
+	public const byte CardPosSyncId = 7;
 
 	[System.Serializable]
 	public struct InitialData {
@@ -69,7 +71,18 @@ public class Structs {
 
 		public byte playerId;
 		public int numCards;
-
 	}
 
+
+	[System.Serializable]
+	public struct CardPositionSyncPacket {
+
+		public CardPositionSyncPacket(SupportingStructs.CardPositionSync[] cardPositions, byte playerId) {
+			this.cardPositions = cardPositions;
+			this.playerId = playerId;
+		}
+
+		public byte playerId;
+		public SupportingStructs.CardPositionSync[] cardPositions;
+	}
 }

@@ -25,11 +25,14 @@ public class Client : MonoBehaviour {
 	private bool gotInitData;
 	private Structs.InitialData init;
 
+	private bool gotCardPositions;
+	private Structs.CardPositionSyncPacket cardPos;
+
 	#endregion
 
 	public void Connect(string ip, ushort port) {
 		client = new TCPClient(ip, port);
-		client.SetUpClientInfo();
+		client.SetUpClientInfo(string.Format("({0})-{1}", FindObjectOfType<Server>() != null ? "Server" : "Client", Environment.UserName));
 		client.Connect();
 		client.getConnection.OnStringReceived += OnStringReceived;
 		SetUpTransmissionIds();
@@ -61,6 +64,10 @@ public class Client : MonoBehaviour {
 		init = data;
 		gotInitData = true;
 	}
+	private void OnCardPositions(Structs.CardPositionSyncPacket obj) {
+		gotCardPositions = true;
+		cardPos = obj;
+	}
 
 
 	public void SetUpTransmissionIds() {
@@ -69,6 +76,7 @@ public class Client : MonoBehaviour {
 		ids.DefineCustomDataTypeForID<Structs.PlayCardAction>(Structs.PlayCardPacketId, OnCardPlayed);
 		ids.DefineCustomDataTypeForID<Structs.DrawCardAction>(Structs.DrawPacketId, OnDrawCard);
 		ids.DefineCustomDataTypeForID<Structs.ExtraCardArgs>(Structs.ExtraCardArgsPacketId, OnExtraInfo);
+		ids.DefineCustomDataTypeForID<Structs.CardPositionSyncPacket>(Structs.CardPosSyncId, OnCardPositions);
 	}
 
 
@@ -108,6 +116,10 @@ public class Client : MonoBehaviour {
 			SceneManager.LoadScene(Constants.Scene_Game);
 			SceneManager.sceneLoaded += SceneManager_sceneLoaded;
 			
+		}
+		if (gotCardPositions) {
+			gm.players[cardPos.playerId].ArrangeCards(cardPos.cardPositions);
+			gotCardPositions = false;
 		}
 	}
 
