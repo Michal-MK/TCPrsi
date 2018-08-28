@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class InfoDisplayer : MonoBehaviour {
 
+	public GameObject infoDisplay;
+	public GameObject turnIndicatorPrefab;
+
 	public Sprite kule;
 	public Sprite listy;
 	public Sprite srdce;
@@ -13,7 +16,7 @@ public class InfoDisplayer : MonoBehaviour {
 
 	private bool showColorForOneTurn;
 
-	public SpriteRenderer[] playerArrows;
+	private List<SpriteRenderer> playerArrows = new List<SpriteRenderer>();
 
 	private void Start() {
 		Player.OnEndTurn += Player_OnEndTurn;
@@ -34,7 +37,7 @@ public class InfoDisplayer : MonoBehaviour {
 		foreach (SpriteRenderer r in playerArrows) {
 			r.color = Color.red;
 		}
-		playerArrows[(e.index + 1) % playerArrows.Length].color = Color.green;
+		playerArrows[(e.index + 1) % playerArrows.Count].color = Color.green;
 		
 	}
 
@@ -62,10 +65,25 @@ public class InfoDisplayer : MonoBehaviour {
 		}
 	}
 
-	public void ShowPlayerTurn(byte index) {
+	public void InstantiateTurnIndicators(Player[] players) {
+		for (int i = 0; i < players.Length; i++) {
+			Player p = players[i];
+			Vector2 direction = new Vector3(Mathf.Cos(p.angle), Mathf.Sin(p.angle));
+			if (p.controlledByLocal) {
+				direction = direction * (Constants.MiddleRadius * 0.5f);
+			}
+			else {
+				direction = direction * (Constants.MiddleRadius);
 
+			}
+			
+
+			playerArrows.Add(Instantiate(turnIndicatorPrefab, direction, new Quaternion(0, 0, p.angle, 0), infoDisplay.transform).GetComponent<SpriteRenderer>());
+			if(i == 0) {
+				playerArrows[0].color = Color.green;
+			}
+		}
 	}
-
 
 	public void HideColor() {
 		colorDisplay.enabled = false;

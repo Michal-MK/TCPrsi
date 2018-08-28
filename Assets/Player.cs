@@ -23,6 +23,10 @@ public class Player : MonoBehaviour {
 
 	public string controllingClientName;
 
+
+	public float angle;
+	public float distance;
+
 	public void Initialise(byte index, string playerName, GameManager manager) {
 		this.name = playerName + "_PlayerObject";
 		this.index = index;
@@ -156,14 +160,40 @@ public class Player : MonoBehaviour {
 	}
 
 	public void ArrangeCards() {
-		for (int i = 0; i < hand.Count; i++) {
-			if (index == 0) {
-				hand[i].transform.position = new Vector2(-11 + i * 2, -7f);
-			}
-			else {
-				hand[i].transform.position = new Vector2(-11 + i * 2, 7f);
 
+		Vector2 middle;
+		Quaternion cardAngle;
+		float cardOverlap;
+		Vector2 cardStep;
+		Vector3 cardScale;
+
+		if (!controlledByLocal) {
+			
+			middle = new Vector2(Mathf.Cos(angle) * distance, Mathf.Sin(angle) * distance);
+			cardAngle = Quaternion.Euler(0, 0, 90 + Mathf.Rad2Deg * angle);
+			cardOverlap = Constants.CardWidth * 0.25f;
+			cardStep = new Vector2(-Mathf.Sin(angle) * cardOverlap, Mathf.Cos(angle) * cardOverlap);
+			cardScale = Vector3.one;
+
+			
+		}
+		else {
+			int count = hand.Count;
+			middle = new Vector2(Mathf.Cos(angle) * distance, Mathf.Sin(angle) * distance);
+			cardAngle = Quaternion.Euler(0, 0, 90 + Mathf.Rad2Deg * angle);
+			cardOverlap = Constants.CardWidth * 1;
+			cardStep = new Vector2(-Mathf.Sin(angle) * cardOverlap, Mathf.Cos(angle) * cardOverlap);
+			cardScale = Vector3.one * 2;
+
+			float width = count * cardOverlap;
+			if(width * 2 > manager.cameraWidth) {
+				cardScale = Vector3.one * (manager.cameraWidth / width);
 			}
+		}
+		for (int i = 0; i < hand.Count; i++) {
+			Vector2 realPos = middle + ((float)(i - (hand.Count * 0.5 - 0.5f)) * cardStep * cardScale);
+			hand[i].gameObject.GetComponent<RectTransform>().SetPositionAndRotation(realPos, cardAngle);
+			hand[i].transform.localScale = cardScale;
 			hand[i].myRenderer.sortingOrder = i;
 		}
 	}
@@ -195,7 +225,6 @@ public class Player : MonoBehaviour {
 		turnInProgress = false;
 
 		OnEndTurn(this, this);
-
 	}
 
 
