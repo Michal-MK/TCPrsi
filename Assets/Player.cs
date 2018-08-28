@@ -15,12 +15,16 @@ public class Player : MonoBehaviour {
 	private bool waitingForInput;
 	private bool turnInProgress;
 	public bool controlledByLocal;
-	
+
 	private Card workingCard;
 
 	public byte index;
 
 	public string controllingClientName;
+
+
+	public float angle;
+	public float distance;
 
 	public void Initialise(byte index, string playerName, GameManager manager) {
 		this.name = playerName + "_PlayerObject";
@@ -32,7 +36,7 @@ public class Player : MonoBehaviour {
 		}
 		hand = new List<Card>();
 		GameManager.OnTurnBegin += BeginTurn;
- 	}
+	}
 
 	public void OnDestroy() {
 		GameManager.OnTurnBegin -= BeginTurn;
@@ -47,7 +51,7 @@ public class Player : MonoBehaviour {
 		for (int i = 0; i < numCards; i++) {
 			Card c = manager.deckManager.DrawCard();
 			c.currentOwner = this;
-			
+
 			c.IsFaceUp = controlledByLocal;
 			c.myCollider.enabled = true;
 
@@ -55,7 +59,7 @@ public class Player : MonoBehaviour {
 			drawnCard = c;
 			ArrangeCards();
 		}
-		if (controlledByLocal  && manager.gameBegan) {
+		if (controlledByLocal && manager.gameBegan) {
 			manager.SendCardDrawn(new DrawCardAction(numCards, index));
 		}
 		turnInProgress = false;
@@ -65,14 +69,14 @@ public class Player : MonoBehaviour {
 
 	public void Play(Card card) {
 
-		if (waitingForInput  || !turnInProgress) {
+		if (waitingForInput || !turnInProgress) {
 			ArrangeCards();
 			return;
 		}
 
 		switch (card.cardValue) {
 			case Card.CardValue.Sedm: {
-				if ((manager.deckManager.talon.Peek().cardColor == card.cardColor || manager.deckManager.talon.Peek().cardValue == card.cardValue ) && manager.AceState == false) {
+				if ((manager.deckManager.talon.Peek().cardColor == card.cardColor || manager.deckManager.talon.Peek().cardValue == card.cardValue) && manager.AceState == false) {
 					card.MoveToTalon();
 					hand.Remove(card);
 					int order = manager.deckManager.talon.Peek().myRenderer.sortingOrder;
@@ -85,15 +89,15 @@ public class Player : MonoBehaviour {
 
 					manager.SevenState += 2;
 					turnInProgress = false;
-					
-					
+
+
 
 					OnEndTurn(this, this);
 				}
 				break;
 			}
 			case Card.CardValue.Svrsek: {
-				if(manager.AceState == false && manager.SevenState == 0) {
+				if (manager.AceState == false && manager.SevenState == 0) {
 					card.MoveToTalon();
 					hand.Remove(card);
 					workingCard = card;
@@ -107,7 +111,7 @@ public class Player : MonoBehaviour {
 						manager.SendCardPlayed(new PlayCardAction(new CardInfo(card.cardColor, card.cardValue), index));
 					}
 				}
-				
+
 				break;
 			}
 			case Card.CardValue.Eso: {
@@ -146,7 +150,7 @@ public class Player : MonoBehaviour {
 				break;
 			}
 		}
-		
+
 
 		if (hand.Count == 0) {
 			OnVictory?.Invoke(this, this);
@@ -155,15 +159,41 @@ public class Player : MonoBehaviour {
 	}
 
 	public void ArrangeCards() {
+		Vector2 middle;
+		Quaternion cardAngle;
+		float cardOverlap;
+		Vector2 cardStep;
+		Vector3 cardScale;
+
+		if (!controlledByLocal) {
+			
+			middle = new Vector2(Mathf.Cos(angle) * distance, Mathf.Sin(angle) * distance);
+			cardAngle = Quaternion.Euler(0, 0, 90 + Mathf.Rad2Deg * angle);
+			cardOverlap = Constants.CardWidth * 0.25f;
+			cardStep = new Vector2(-Mathf.Sin(angle) * cardOverlap, Mathf.Cos(angle) * cardOverlap);
+			cardScale = Vector3.one;
+
+			
+		}
+		else {
+			int count = hand.Count;
+			middle = new Vector2(Mathf.Cos(angle) * distance, Mathf.Sin(angle) * distance);
+			cardAngle = Quaternion.Euler(0, 0, 90 + Mathf.Rad2Deg * angle);
+			cardOverlap = Constants.CardWidth * 1;
+			cardStep = new Vector2(-Mathf.Sin(angle) * cardOverlap, Mathf.Cos(angle) * cardOverlap);
+			cardScale = Vector3.one * 2;
+
+			float width = count * cardOverlap;
+			if(width * 2 > manager.cameraWidth) {
+				cardScale = Vector3.one * (manager.cameraWidth / width);
+			}
+		}
 		for (int i = 0; i < hand.Count; i++) {
-			if(index == 0) {
-				hand[i].transform.position = new Vector2(-11 + i * 2, -7f);
-			}
-			else {
-				hand[i].transform.position = new Vector2(-11 + i * 2, 7f);
-				
-			}
+			Vector2 realPos = middle + ((float)(i - (hand.Count * 0.5 - 0.5f)) * cardStep * cardScale);
+			hand[i].gameObject.GetComponent<RectTransform>().SetPositionAndRotation(realPos, cardAngle);
+			hand[i].transform.localScale = cardScale;
 			hand[i].myRenderer.sortingOrder = i;
+
 		}
 	}
 
@@ -173,8 +203,8 @@ public class Player : MonoBehaviour {
 		waitingForInput = true;
 	}
 
-	public void ColorSelected(object sender,Card.CardColor color) {
-		
+	public void ColorSelected(object sender, Card.CardColor color) {
+
 		waitingForInput = false;
 		Controls.OnColorSelected -= ColorSelected;
 		workingCard.cardColor = color;
@@ -196,7 +226,7 @@ public class Player : MonoBehaviour {
 		if (player == this) {
 			turnInProgress = true;
 		}
-	} 
+	}
 
 	private void FlipCards(bool visible) {
 		foreach (Card card in hand) {
@@ -207,7 +237,7 @@ public class Player : MonoBehaviour {
 
 	public Card cardFromCardInfo(CardInfo info) {
 		foreach (Card card in hand) {
-			if(card.cardValue == info.value && card.cardColor == info.color) {
+			if (card.cardValue == info.value && card.cardColor == info.color) {
 				return card;
 			}
 		}

@@ -3,17 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Controls : MonoBehaviour {
-
-
 	public static event EventHandler<Card.CardColor> OnColorSelected;
 
-
 	public GameObject colorSelector;
-
-
-
-	private void Start() {
-	}
 
 	public void Kule() {
 		OnColorSelected?.Invoke(this,Card.CardColor.Kule);
@@ -31,7 +23,4 @@ public class Controls : MonoBehaviour {
 		OnColorSelected?.Invoke(this,Card.CardColor.Zaludy);
 		colorSelector.SetActive(false);
 	}
-
-
-
 }

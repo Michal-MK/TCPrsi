@@ -37,7 +37,6 @@ public class LobbyManager : MonoBehaviour {
 			port = 256;
 		}
 		server.Initialise(this, port);
-		Thread.Sleep(500);
 		AddClient().Connect(Helper.GetActiveIPv4Address().ToString(), port);
 	}
 
