@@ -27,7 +27,7 @@ public class Player : MonoBehaviour {
 		this.index = index;
 		controllingClientName = playerName;
 		this.manager = manager;
-		if (controllingClientName == System.Environment.UserName) {
+		if (index == manager.localId) {
 			controlledByLocal = true;
 		}
 		hand = new List<Card>();
