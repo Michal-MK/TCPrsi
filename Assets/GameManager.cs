@@ -20,6 +20,7 @@ public class GameManager : MonoBehaviour {
 	public Transform talonPlaceTransform;
 
 	private Client client;
+	public byte localId;
 
 
 	public bool AceState;
@@ -33,6 +34,7 @@ public class GameManager : MonoBehaviour {
 		Player.OnEndTurn += PlayerTurnFinished;
 		Player.OnVictory += VictoryHandling;
 		deckManager.Initialise(Extensions.Invert(data.cards));
+		localId = client.client.clientID;
 
 		foreach (byte id in data.players.Keys) {
 			players.Add(AddPlayer(id, data.players[id]));
