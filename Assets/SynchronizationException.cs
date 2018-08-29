@@ -1,5 +1,5 @@
 ﻿using System;
-
+[Serializable]
 public class SynchronizationException : Exception {
 	public SynchronizationException() {	}
 

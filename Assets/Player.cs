@@ -193,7 +193,6 @@ public class Player : MonoBehaviour {
 			hand[i].gameObject.GetComponent<RectTransform>().SetPositionAndRotation(realPos, cardAngle);
 			hand[i].transform.localScale = cardScale;
 			hand[i].myRenderer.sortingOrder = i;
-
 		}
 	}
 
@@ -217,9 +216,7 @@ public class Player : MonoBehaviour {
 		turnInProgress = false;
 
 		OnEndTurn(this, this);
-
 	}
-
 
 
 	public void BeginTurn(object sender, Player player) {

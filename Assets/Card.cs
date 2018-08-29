@@ -23,13 +23,19 @@ public class Card : MonoBehaviour, IEndDragHandler {
 		Zaludy
 	}
 
+	[System.NonSerialized]
 	public Sprite face;
+	[System.NonSerialized]
 	public Sprite cover;
 
+	[System.NonSerialized]
 	public SpriteRenderer myRenderer;
+	[System.NonSerialized]
 	public BoxCollider2D myCollider;
 
+	[System.NonSerialized]
 	public GameManager manager;
+	[System.NonSerialized]
 	public Player currentOwner;
 
 	private bool isFaceUp;

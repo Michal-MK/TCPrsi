@@ -28,14 +28,14 @@ public class GameplayStatistics {
 				history = (Dictionary<Guid, ClientHistory>)bf.Deserialize(fs);
 			}
 		}
-		catch (IOException e) {
+		catch (IOException) {
 			Debug.Log("File does not exist, creating one!");
 			try {
 				using (FileStream fs = File.Create(filePath)) {
 					bf.Serialize(fs, history);
 				}
 			}
-			catch (IOException ee) {
+			catch (IOException) {
 				Debug.LogError("Failed to create a new client history file!");
 			}
 		}
