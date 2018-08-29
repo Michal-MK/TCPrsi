@@ -29,7 +29,7 @@ public class Client : MonoBehaviour {
 
 	public void Connect(string ip, ushort port) {
 		client = new TCPClient(ip, port);
-		client.SetUpClientInfo();
+		client.SetUpClientInfo(string.Format("({0})-{1}", FindObjectOfType<Server>() != null ? "Server" : "Client", Environment.UserName));
 		client.Connect();
 		client.getConnection.OnStringReceived += OnStringReceived;
 		SetUpTransmissionIds();
