@@ -32,6 +32,7 @@ public class GameManager : MonoBehaviour {
 	public bool gameBegan = false;
 
 	public void Initialise(InitialData data, Client client) {
+		
 		this.client = client;
 		Player.OnEndTurn += PlayerTurnFinished;
 		Player.OnVictory += VictoryHandling;
@@ -95,6 +96,10 @@ public class GameManager : MonoBehaviour {
 		client.client.getConnection.SendUserDefinedData(ExtraCardArgsPacketId, Helper.GetBytesFromObject(action));
 	}
 
+
+	public void SendLossPacket(LossPacket action) {
+		client.client.getConnection.SendUserDefinedData(LossId, Helper.GetBytesFromObject(action));
+	}
 
 	public void ShowSelectedColor(Card.CardColor color) {
 		display.DisplayColor(color);

@@ -4,6 +4,8 @@ using Igor.TCP;
 using System.Collections.Generic;
 using System;
 using UnityEngine.SceneManagement;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 public class Server : MonoBehaviour {
 	public TCPServer server;
@@ -12,8 +14,8 @@ public class Server : MonoBehaviour {
 
 	public void Initialise(LobbyManager lm, ushort port) {
 		this.lm = lm;
-		
-		
+
+
 		server = new TCPServer();
 		server.Start(port);
 		server.OnConnectionEstablished += Server_OnConnectionEstablished;
@@ -24,7 +26,7 @@ public class Server : MonoBehaviour {
 		if (firstTime) {
 			SetUpTransmissionIds();
 		}
-		
+
 		Structs.InitialData data = new Structs.InitialData(lm.GenerateCardInfo(), players);
 		foreach (byte id in players.Keys) {
 			server.GetConnection(id).SendUserDefinedData(Structs.InitialPacketId, Helper.GetBytesFromObject(data));
@@ -32,16 +34,31 @@ public class Server : MonoBehaviour {
 
 	}
 
-	private void Server_OnConnectionEstablished(object sender, ClientConnectedEventArgs e) {
+	private async void Server_OnConnectionEstablished(object sender, ClientConnectedEventArgs e) {
 		players.Add(e.clientInfo.clientID, e.clientInfo.computerName);
+		server.DefineRequestEntry<Structs.ClientGUID>(e.clientInfo.clientID, Structs.GUID);
+		TCPResponse response = await server.RaiseRequestAsync(e.clientInfo.clientID,Structs.GUID);
+		using(MemoryStream ms = new MemoryStream()) {
+			ms.Write(response.rawData, 0, response.rawData.Length);
+			Structs.ClientGUID newg = new Structs.ClientGUID();
+			ms.Seek(0, SeekOrigin.Begin);
+			BinaryFormatter bf = new BinaryFormatter();
+			try {
+				newg = (Structs.ClientGUID)bf.Deserialize(ms);
+			}
+			catch (Exception ee) {
+				Debug.Log(ee);
+			}
+			e.myServer.GetConnection(e.clientInfo.clientID).dataIDs.DefineCustomDataTypeForID<Structs.ClientGUID>(Structs.GUID, null);
+			OnGUIDReceived(newg);
+		}
 		server.GetConnection(e.clientInfo.clientID).OnStringReceived += OnStringReceived;
 		server.GetConnection(e.clientInfo.clientID).OnInt64Received += Server_OnInt64Received;
 		lm.Print(e.clientInfo.computerName);
-
 	}
 
-	private void Server_OnInt64Received(object sender, PacketReceivedEventArgs<long> e) {
-		if(e.data == 1) {
+	private void Server_OnInt64Received(object sender, PacketReceivedEventArgs<long> data) {
+		if (data.data == 1) {
 			StartGame(false);
 		}
 	}
@@ -59,6 +76,30 @@ public class Server : MonoBehaviour {
 			dataIDs.DefineCustomDataTypeForID<Structs.PlayCardAction>(Structs.PlayCardPacketId, OnPlayCardPacketReceived);
 			dataIDs.DefineCustomDataTypeForID<Structs.DrawCardAction>(Structs.DrawPacketId, OnDrawCardPacketReceived);
 			dataIDs.DefineCustomDataTypeForID<Structs.ExtraCardArgs>(Structs.ExtraCardArgsPacketId, OnExtraCardArgsPacketReceived);
+			dataIDs.DefineCustomDataTypeForID<Structs.CardPositionSyncPacket>(Structs.CardPosSyncId, OnCardPositionPacketReceived);
+			dataIDs.DefineCustomDataTypeForID<Structs.LossPacket>(Structs.LossId, OnLossPacketReceived);
+		}
+	}
+
+	private void OnLossPacketReceived(Structs.LossPacket data) {
+		foreach (byte id in players.Keys) {
+			if (id != data.playerId) {
+				server.GetConnection(id).SendUserDefinedData(Structs.LossId, Helper.GetBytesFromObject(data));
+			}
+		}
+	}
+
+	private void OnGUIDReceived(Structs.ClientGUID data) {
+		foreach (byte id in players.Keys) {
+			if (id != data.playerId) {
+				byte[] dataa;
+				using(MemoryStream ms = new MemoryStream()) {
+					BinaryFormatter bf = new BinaryFormatter();
+					bf.Serialize(ms, data);
+					dataa = ms.ToArray();
+				}
+				server.GetConnection(id).SendUserDefinedData(Structs.GUID,dataa);
+			}
 		}
 	}
 

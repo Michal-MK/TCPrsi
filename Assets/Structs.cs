@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+﻿using System;
+using UnityEngine;
 
 public class Structs {
 
@@ -6,8 +8,10 @@ public class Structs {
 	public const byte PlayCardPacketId = 4;
 	public const byte DrawPacketId = 5;
 	public const byte ExtraCardArgsPacketId = 6;
+	public const byte LossId = 8;
+	public const byte GUID = 10;
 
-	[System.Serializable]
+	[Serializable]
 	public struct InitialData {
 		public InitialData(Stack<CardInfo> cards, Dictionary<byte, string> players) {
 			this.cards = cards;
@@ -18,7 +22,7 @@ public class Structs {
 		public Dictionary<byte, string> players { get; }
 	}
 
-	[System.Serializable]
+	[Serializable]
 	public struct CardInfo {
 		public CardInfo(Card.CardColor color, Card.CardValue value) {
 			this.color = color;
@@ -34,7 +38,7 @@ public class Structs {
 	}
 
 
-	[System.Serializable]
+	[Serializable]
 	public struct PlayCardAction {
 
 		public PlayCardAction(CardInfo card, byte playerId) {
@@ -47,7 +51,7 @@ public class Structs {
 
 	}
 
-	[System.Serializable]
+	[Serializable]
 	public struct ExtraCardArgs {
 
 		public ExtraCardArgs(Card.CardColor color, byte playerId) {
@@ -59,7 +63,7 @@ public class Structs {
 
 	}
 
-	[System.Serializable]
+	[Serializable]
 	public struct DrawCardAction {
 
 		public DrawCardAction(int numCards, byte playerId) {
@@ -70,6 +74,30 @@ public class Structs {
 		public byte playerId;
 		public int numCards;
 
+	}
+
+	[Serializable]
+	public struct ClientGUID {
+		public ClientGUID(Guid guid, string clientName, byte playerId) {
+			this.guid = guid;
+			this.playerId = playerId;
+			this.clientName = clientName;
+		}
+
+		public Guid guid;
+		public byte playerId;
+		public string clientName;
+	}
+
+	[Serializable]
+	public struct LossPacket {
+		public LossPacket(Guid winnerGUID, byte playerId) {
+			this.winnerGUID = winnerGUID;
+			this.playerId = playerId;
+		}
+
+		public Guid winnerGUID;
+		public byte playerId;
 	}
 
 }
