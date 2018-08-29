@@ -68,94 +68,82 @@ public class Player : MonoBehaviour {
 	}
 
 	public void Play(Card card) {
-
 		if (waitingForInput || !turnInProgress) {
 			ArrangeCards();
 			return;
 		}
+		BaseCardBehaviour(card);
 
 		switch (card.cardValue) {
 			case Card.CardValue.Sedm: {
-				if ((manager.deckManager.talon.Peek().cardColor == card.cardColor || manager.deckManager.talon.Peek().cardValue == card.cardValue) && manager.AceState == false) {
-					card.MoveToTalon();
-					hand.Remove(card);
-					int order = manager.deckManager.talon.Peek().myRenderer.sortingOrder;
-					manager.deckManager.talon.Push(card);
-					card.myRenderer.sortingOrder = order + 1;
-					card.currentOwner = null;
-					if (controlledByLocal) {
-						manager.SendCardPlayed(new PlayCardAction(new CardInfo(card.cardColor, card.cardValue), index));
-					}
-
-					manager.SevenState += 2;
-					turnInProgress = false;
-
-
-
-					OnEndTurn(this, this);
-				}
+				manager.SevenState += 2;
+				OnEndTurn(this, this);
 				break;
 			}
 			case Card.CardValue.Svrsek: {
-				if (manager.AceState == false && manager.SevenState == 0) {
-					card.MoveToTalon();
-					hand.Remove(card);
-					workingCard = card;
-
-					int order = manager.deckManager.talon.Peek().myRenderer.sortingOrder;
-					manager.deckManager.talon.Push(card);
-					card.myRenderer.sortingOrder = order + 1;
-					card.currentOwner = null;
-					if (controlledByLocal) {
-						GetColorInput();
-						manager.SendCardPlayed(new PlayCardAction(new CardInfo(card.cardColor, card.cardValue), index));
-					}
+				if (controlledByLocal) {
+					GetColorInput();
 				}
-
 				break;
 			}
 			case Card.CardValue.Eso: {
-				if ((manager.deckManager.talon.Peek().cardColor == card.cardColor || manager.deckManager.talon.Peek().cardValue == card.cardValue) && manager.SevenState == 0) {
-					card.MoveToTalon();
-					hand.Remove(card);
-					int order = manager.deckManager.talon.Peek().myRenderer.sortingOrder;
-					manager.deckManager.talon.Push(card);
-					card.myRenderer.sortingOrder = order + 1;
-					card.currentOwner = null;
-					if (controlledByLocal) {
-						manager.SendCardPlayed(new PlayCardAction(new CardInfo(card.cardColor, card.cardValue), index));
-					}
-					turnInProgress = false;
-
-					manager.AceState = true;
-					OnEndTurn(this, this);
-				}
+				manager.AceState = true;
+				OnEndTurn(this, this);
 				break;
 			}
 			default: {
-				if ((manager.deckManager.talon.Peek().cardColor == card.cardColor || manager.deckManager.talon.Peek().cardValue == card.cardValue) && manager.SevenState == 0 && manager.AceState == false) {
-					card.MoveToTalon();
-					hand.Remove(card);
-					int order = manager.deckManager.talon.Peek().myRenderer.sortingOrder;
-					manager.deckManager.talon.Push(card);
-					card.myRenderer.sortingOrder = order + 1;
-					card.currentOwner = null;
-					if (controlledByLocal) {
-						manager.SendCardPlayed(new PlayCardAction(new CardInfo(card.cardColor, card.cardValue), index));
-					}
-					turnInProgress = false;
-
-					OnEndTurn(this, this);
-				}
+				OnEndTurn(this, this);
 				break;
 			}
 		}
-
-
 		if (hand.Count == 0) {
 			OnVictory?.Invoke(this, this);
 		}
 		ArrangeCards();
+	}
+
+	public bool CanPlay(Card card) {
+		switch (card.cardValue) {
+			case Card.CardValue.Sedm: {
+				if ((manager.deckManager.talon.Peek().cardColor == card.cardColor || manager.deckManager.talon.Peek().cardValue == card.cardValue)
+						&& manager.AceState == false) {
+					return true;
+				}
+				return false;
+			}
+			case Card.CardValue.Svrsek: {
+				if (manager.AceState == false && manager.SevenState == 0) {
+					return true;
+				}
+				return false;
+			}
+			case Card.CardValue.Eso: {
+				if ((manager.deckManager.talon.Peek().cardColor == card.cardColor || manager.deckManager.talon.Peek().cardValue == card.cardValue)
+						&& manager.SevenState == 0) {
+					return true;
+				}
+				return false;
+			}
+			default: {
+				if ((manager.deckManager.talon.Peek().cardColor == card.cardColor || manager.deckManager.talon.Peek().cardValue == card.cardValue)
+						&& manager.SevenState == 0 && manager.AceState == false) {
+					return true;
+				}
+				return false;
+			}
+		}
+	}
+
+	private void BaseCardBehaviour(Card card) {
+		card.MoveToTalon();
+		hand.Remove(card);
+		int order = manager.deckManager.talon.Peek().myRenderer.sortingOrder;
+		manager.deckManager.talon.Push(card);
+		card.myRenderer.sortingOrder = order + 1;
+		card.currentOwner = null;
+		if (controlledByLocal) {
+			manager.SendCardPlayed(new PlayCardAction(new CardInfo(card.cardColor, card.cardValue), index));
+		}
 	}
 
 	public void ArrangeCards() {
