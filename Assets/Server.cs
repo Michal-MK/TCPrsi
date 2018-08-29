@@ -3,7 +3,6 @@ using System.Collections;
 using Igor.TCP;
 using System.Collections.Generic;
 using System;
-using UnityEngine.SceneManagement;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
@@ -31,25 +30,18 @@ public class Server : MonoBehaviour {
 		foreach (byte id in players.Keys) {
 			server.GetConnection(id).SendUserDefinedData(Structs.InitialPacketId, Helper.GetBytesFromObject(data));
 		}
-
 	}
 
 	private async void Server_OnConnectionEstablished(object sender, ClientConnectedEventArgs e) {
 		players.Add(e.clientInfo.clientID, e.clientInfo.computerName);
 		server.DefineRequestEntry<Structs.ClientGUID>(e.clientInfo.clientID, Structs.GUID);
-		TCPResponse response = await server.RaiseRequestAsync(e.clientInfo.clientID,Structs.GUID);
-		using(MemoryStream ms = new MemoryStream()) {
+		e.myServer.GetConnection(e.clientInfo.clientID).dataIDs.DefineCustomDataTypeForID<Structs.ClientGUID>(Structs.GUID, null);
+		TCPResponse response = await server.RaiseRequestAsync(e.clientInfo.clientID, Structs.GUID);
+		using (MemoryStream ms = new MemoryStream()) {
 			ms.Write(response.rawData, 0, response.rawData.Length);
-			Structs.ClientGUID newg = new Structs.ClientGUID();
 			ms.Seek(0, SeekOrigin.Begin);
 			BinaryFormatter bf = new BinaryFormatter();
-			try {
-				newg = (Structs.ClientGUID)bf.Deserialize(ms);
-			}
-			catch (Exception ee) {
-				Debug.Log(ee);
-			}
-			e.myServer.GetConnection(e.clientInfo.clientID).dataIDs.DefineCustomDataTypeForID<Structs.ClientGUID>(Structs.GUID, null);
+			Structs.ClientGUID newg = (Structs.ClientGUID)bf.Deserialize(ms);
 			OnGUIDReceived(newg);
 		}
 		server.GetConnection(e.clientInfo.clientID).OnStringReceived += OnStringReceived;
@@ -76,7 +68,6 @@ public class Server : MonoBehaviour {
 			dataIDs.DefineCustomDataTypeForID<Structs.PlayCardAction>(Structs.PlayCardPacketId, OnPlayCardPacketReceived);
 			dataIDs.DefineCustomDataTypeForID<Structs.DrawCardAction>(Structs.DrawPacketId, OnDrawCardPacketReceived);
 			dataIDs.DefineCustomDataTypeForID<Structs.ExtraCardArgs>(Structs.ExtraCardArgsPacketId, OnExtraCardArgsPacketReceived);
-			dataIDs.DefineCustomDataTypeForID<Structs.CardPositionSyncPacket>(Structs.CardPosSyncId, OnCardPositionPacketReceived);
 			dataIDs.DefineCustomDataTypeForID<Structs.LossPacket>(Structs.LossId, OnLossPacketReceived);
 		}
 	}
@@ -93,12 +84,12 @@ public class Server : MonoBehaviour {
 		foreach (byte id in players.Keys) {
 			if (id != data.playerId) {
 				byte[] dataa;
-				using(MemoryStream ms = new MemoryStream()) {
+				using (MemoryStream ms = new MemoryStream()) {
 					BinaryFormatter bf = new BinaryFormatter();
 					bf.Serialize(ms, data);
 					dataa = ms.ToArray();
 				}
-				server.GetConnection(id).SendUserDefinedData(Structs.GUID,dataa);
+				server.GetConnection(id).SendUserDefinedData(Structs.GUID, dataa);
 			}
 		}
 	}
