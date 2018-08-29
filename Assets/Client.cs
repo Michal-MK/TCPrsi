@@ -38,7 +38,7 @@ public class Client : MonoBehaviour {
 	public void Connect(string ip, ushort port) {
 		PersistentManager.instance.statistics = new GameplayStatistics();
 		client = new TCPClient(ip, port);
-		client.SetUpClientInfo();
+		client.SetUpClientInfo(string.Format("({0})-{1}", FindObjectOfType<Server>() != null ? "Server" : "Client", Environment.UserName));
 		client.Connect();
 		SetUpTransmissionIds();
 
