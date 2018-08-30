@@ -67,23 +67,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Delegates:
-  - eventID: 2
-    callback:
-      m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 114307558858309386}
-          m_MethodName: Click
-          m_Mode: 1
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: 0
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 0
-          m_CallState: 2
-      m_TypeName: UnityEngine.EventSystems.EventTrigger+TriggerEvent, UnityEngine.UI,
-        Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
   - eventID: 5
     callback:
       m_PersistentCalls:
@@ -113,11 +96,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3186992305d053f4db2a432bcb1ccd8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  manager: {fileID: 0}
-  myRenderer: {fileID: 212311728194773010}
   face: {fileID: 0}
   cover: {fileID: 21300000, guid: 72aba9f995cb11b4f816ba1019c6f4f3, type: 3}
-  collider: {fileID: 0}
+  myRenderer: {fileID: 212311728194773010}
+  myCollider: {fileID: 61476130315725274}
+  manager: {fileID: 0}
   currentOwner: {fileID: 0}
 --- !u!212 &212311728194773010
 SpriteRenderer:

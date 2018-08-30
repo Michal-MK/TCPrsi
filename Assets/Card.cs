@@ -95,7 +95,7 @@ public class Card : MonoBehaviour, IEndDragHandler {
 		RaycastHit2D[] hits = Physics2D.RaycastAll(eventData.pointerCurrentRaycast.worldPosition, eventData.pointerCurrentRaycast.worldNormal);
 
 		foreach (RaycastHit2D hit2D in hits) {
-			if (hit2D.transform.name == "_TalonCollider" && currentOwner.controlledByLocal == true) {
+			if (hit2D.transform.name == "_TalonCollider" && currentOwner.controlledByLocal == true && currentOwner.CanPlay(this)) {
 				currentOwner.Play(this);
 				return;
 			}
