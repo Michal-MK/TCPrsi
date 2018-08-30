@@ -1841,10 +1841,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   connectionOBJ: {fileID: 509531076}
-  textToSend: {fileID: 0}
-  chatbox: {fileID: 0}
-  adressPort: {fileID: 0}
-  serverPort: {fileID: 0}
+  textToSend: {fileID: 928642287}
+  chatbox: {fileID: 2044449102}
+  adressPort: {fileID: 2084904535}
+  serverPort: {fileID: 1460299039}
   client: {fileID: 0}
 --- !u!1 &1673197945
 GameObject:
@@ -2417,7 +2417,7 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_textAlignment: 257
+  m_textAlignment: 514
   m_isAlignmentEnumConverted: 1
   m_characterSpacing: 0
   m_wordSpacing: 0
@@ -2465,7 +2465,7 @@ MonoBehaviour:
   m_spriteAnimator: {fileID: 0}
   m_isInputParsingRequired: 0
   m_inputSource: 0
-  m_hasFontAssetChanged: 1
+  m_hasFontAssetChanged: 0
   m_subTextObjects:
   - {fileID: 0}
   - {fileID: 0}
