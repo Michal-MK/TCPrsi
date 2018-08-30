@@ -6,6 +6,7 @@ using System.Threading;
 using System.Collections.Generic;
 using static Structs;
 using System;
+using System.Collections;
 
 public class LobbyManager : MonoBehaviour {
 
@@ -37,6 +38,11 @@ public class LobbyManager : MonoBehaviour {
 			port = 256;
 		}
 		server.Initialise(this, port);
+		StartCoroutine(CreateClient(port));
+	}
+
+	private IEnumerator CreateClient(ushort port) {
+		yield return new WaitUntil(() => server.isInitialised);
 		AddClient(true).Connect(Helper.GetActiveIPv4Address().ToString(), port);
 	}
 
@@ -51,32 +57,28 @@ public class LobbyManager : MonoBehaviour {
 		return client;
 	}
 
-	//Unnecessary ?
 	private Queue<string> toPrint = new Queue<string>();
+	private bool change = false;
+
 	public void Print(string s) {
 		toPrint.Enqueue(s);
 		change = true;
 	}
-	private string s = "";
-	private bool change = false;
 
 	private void Update() {
 		if (change) {
-			while(toPrint.Count > 0) {
+			while (toPrint.Count > 0) {
 				chatbox.text += ("\n" + toPrint.Dequeue());
 			}
 			change = false;
 		}
 	}
-	//
 
-	//No refenreces
 	public void Send() {
 		client.client.getConnection.SendData(textToSend.text);
 		textToSend.text = "";
 	}
 
-	//1 reference lm.Play()
 	public void Play() {
 		server.StartGame();
 	}
@@ -91,7 +93,6 @@ public class LobbyManager : MonoBehaviour {
 		}
 		copyOfStack.Shuffle();
 		return copyOfStack;
-
 	}
 }
 

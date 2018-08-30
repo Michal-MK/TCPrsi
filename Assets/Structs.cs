@@ -10,7 +10,6 @@ public class Structs {
 	public const byte DrawPacketId = 5;
 	public const byte ExtraCardArgsPacketId = 6;
 	public const byte LossId = 8;
-	public const byte GUID = 10;
 	public const byte ServerStateId = 11;
 	public const byte NewClientId = 12;
 
@@ -77,19 +76,6 @@ public class Structs {
 		public byte playerId;
 		public int numCards;
 
-	}
-
-	[Serializable]
-	public struct ClientGUID {
-		public ClientGUID(Guid guid, string clientName, byte playerId) {
-			this.guid = guid;
-			this.playerId = playerId;
-			this.clientName = clientName;
-		}
-
-		public Guid guid;
-		public byte playerId;
-		public string clientName;
 	}
 
 	[Serializable]

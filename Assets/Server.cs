@@ -9,15 +9,16 @@ public class Server : MonoBehaviour {
 	public Dictionary<byte, string> players = new Dictionary<byte, string>();
 	private LobbyManager lm;
 
+	public bool isInitialised;
+
 	public void Initialise(LobbyManager lm, ushort port) {
 		this.lm = lm;
-		
-		
 		server = new TCPServer();
 		server.Start(port);
 		server.OnConnectionEstablished += Server_OnConnectionEstablished;
 		DontDestroyOnLoad(gameObject);
 		lm.Print("Hosting on " + Helper.GetActiveIPv4Address() + ":" + port);
+		isInitialised = true;
 	}
 
 	public void StartGame(bool firstTime = true) {
@@ -34,12 +35,8 @@ public class Server : MonoBehaviour {
 
 	private void Server_OnConnectionEstablished(object sender, ClientConnectedEventArgs e) {
 		players.Add(e.clientInfo.clientID, e.clientInfo.computerName);
-		server.DefineRequestEntry<Structs.ClientGUID>(e.clientInfo.clientID, Structs.GUID);
-		e.myServer.GetConnection(e.clientInfo.clientID).dataIDs.DefineCustomDataTypeForID<Structs.ClientGUID>(Structs.GUID, null);
 		e.myServer.GetConnection(e.clientInfo.clientID).dataIDs.DefineCustomDataTypeForID<Structs.ServerState>(Structs.ServerStateId, null);
 		e.myServer.GetConnection(e.clientInfo.clientID).dataIDs.DefineCustomDataTypeForID<Structs.NewClient>(Structs.NewClientId, null);
-		//Structs.ClientGUID guid = await GetClientGuid(e);
-		//SendGUIDsToClients(guid);
 		server.GetConnection(e.clientInfo.clientID).OnStringReceived += OnStringReceived;
 		server.GetConnection(e.clientInfo.clientID).OnInt64Received += Server_OnInt64Received;
 		foreach (TCPClientInfo info in server.getConnectedClients) {
@@ -73,21 +70,6 @@ public class Server : MonoBehaviour {
 			dataIDs.DefineCustomDataTypeForID<Structs.LossPacket>(Structs.LossId, OnLossPacketReceived);
 		}
 	}
-
-	//private void SendGUIDsToClients(Structs.ClientGUID data) {
-	//	foreach (byte id in players.Keys) {
-	//		if (id != data.playerId) {
-	//			byte[] dataa;
-	//			using (MemoryStream ms = new MemoryStream()) {
-	//				BinaryFormatter bf = new BinaryFormatter();
-	//				bf.Serialize(ms, data);
-	//				dataa = ms.ToArray();
-	//			}
-	//			server.GetConnection(id).SendUserDefinedData(Structs.GUID, dataa);
-	//		}
-	//	}
-	//}
-
 
 	private void OnLossPacketReceived(Structs.LossPacket data, byte sender) {
 		foreach (byte id in players.Keys) {

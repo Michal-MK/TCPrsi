@@ -31,12 +31,6 @@ public class Client : MonoBehaviour {
 	private bool gotInitData;
 	private Structs.InitialData init;
 
-	private bool gotClientGUID;
-	private Structs.ClientGUID guid;
-
-	private bool gotLossPacket;
-	private Structs.LossPacket lossPacket;
-
 	private bool gotServerState;
 	private Structs.ServerState serverState;
 
@@ -54,11 +48,6 @@ public class Client : MonoBehaviour {
 		SetUpTransmissionIds();
 		DontDestroyOnLoad(gameObject);
 	}
-
-
-	//private Structs.ClientGUID SendGuid() {
-	//	return new Structs.ClientGUID(GameplayStatistics.myNetworkGUID, client.clientInfo.computerName, client.clientID);
-	//}
 
 	private void OnStringReceived(object sender, PacketReceivedEventArgs<string> e) {
 		chatMessage = e;
@@ -85,16 +74,6 @@ public class Client : MonoBehaviour {
 		gotInitData = true;
 	}
 
-	private void OnGUIDReceived(Structs.ClientGUID obj, byte sender) {
-		guid = obj;
-		gotClientGUID = true;
-	}
-
-	private void OnLost(Structs.LossPacket obj, byte sender) {
-		lossPacket = obj;
-		gotLossPacket = true;
-	}
-
 	private void OnServerStateReceived(Structs.ServerState obj, byte sender) {
 		serverState = obj;
 		gotServerState = true;
@@ -110,13 +89,10 @@ public class Client : MonoBehaviour {
 		DataIDs ids = client.getConnection.dataIDs;
 
 		try {
-			client.DefineResponseEntry(Structs.GUID, SendGuid);
 			ids.DefineCustomDataTypeForID<Structs.InitialData>(Structs.InitialPacketId, OnInitialData);
 			ids.DefineCustomDataTypeForID<Structs.PlayCardAction>(Structs.PlayCardPacketId, OnCardPlayed);
 			ids.DefineCustomDataTypeForID<Structs.DrawCardAction>(Structs.DrawPacketId, OnDrawCard);
 			ids.DefineCustomDataTypeForID<Structs.ExtraCardArgs>(Structs.ExtraCardArgsPacketId, OnExtraInfo);
-			ids.DefineCustomDataTypeForID<Structs.ClientGUID>(Structs.GUID, OnGUIDReceived);
-			ids.DefineCustomDataTypeForID<Structs.LossPacket>(Structs.LossId, OnLost);
 			ids.DefineCustomDataTypeForID<Structs.ServerState>(Structs.ServerStateId, OnServerStateReceived);
 			ids.DefineCustomDataTypeForID<Structs.NewClient>(Structs.NewClientId, OnNewClientConnected);
 			client.getConnection.OnStringReceived += OnStringReceived;
@@ -163,14 +139,6 @@ public class Client : MonoBehaviour {
 			SceneManager.LoadScene(Constants.Scene_Game);
 			SceneManager.sceneLoaded += SceneManager_sceneLoaded;
 		}
-		//if (gotClientGUID) {
-		//	PersistentManager.instance.statistics.OnClientConnected(guid);
-		//	gotClientGUID = false;
-		//}
-		//if (gotLossPacket) {
-		//	PersistentManager.instance.statistics.OnMatchLost(lossPacket);
-		//	gotLossPacket = false;
-		//}
 		if (gotServerState) {
 			if (!isHost) {
 				lm.Print("Connected to: " + ipAddress + ":" + port);
