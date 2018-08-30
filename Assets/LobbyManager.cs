@@ -37,22 +37,24 @@ public class LobbyManager : MonoBehaviour {
 			port = 256;
 		}
 		server.Initialise(this, port);
-		AddClient().Connect(Helper.GetActiveIPv4Address().ToString(), port);
+		AddClient(true).Connect(Helper.GetActiveIPv4Address().ToString(), port);
 	}
 
 	public void IamClient() {
-		AddClient().Connect(adressPort.text.Split(':')[0], ushort.Parse(adressPort.text.Split(':')[1]));
+		AddClient(false).Connect(adressPort.text.Split(':')[0], ushort.Parse(adressPort.text.Split(':')[1]));
 	}
 
-	Client AddClient() {
+	private Client AddClient(bool isHost) {
 		client = connectionOBJ.AddComponent<Client>();
+		client.isHost = isHost;
 		client.lm = this;
 		return client;
 	}
 
 	//Unnecessary ?
+	private Queue<string> toPrint = new Queue<string>();
 	public void Print(string s) {
-		this.s = s;
+		toPrint.Enqueue(s);
 		change = true;
 	}
 	private string s = "";
@@ -60,9 +62,10 @@ public class LobbyManager : MonoBehaviour {
 
 	private void Update() {
 		if (change) {
-			chatbox.text += ("\n" + s);
+			while(toPrint.Count > 0) {
+				chatbox.text += ("\n" + toPrint.Dequeue());
+			}
 			change = false;
-			s = "";
 		}
 	}
 	//

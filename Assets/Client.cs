@@ -9,6 +9,12 @@ public class Client : MonoBehaviour {
 	public LobbyManager lm;
 	public GameManager gm;
 
+	private string ipAddress;
+	private ushort port;
+
+	public bool isHost;
+
+
 	#region ToMainThreadVariables
 	private bool gotMessage;
 	private PacketReceivedEventArgs<string> chatMessage;
@@ -25,52 +31,101 @@ public class Client : MonoBehaviour {
 	private bool gotInitData;
 	private Structs.InitialData init;
 
+	private bool gotClientGUID;
+	private Structs.ClientGUID guid;
+
+	private bool gotLossPacket;
+	private Structs.LossPacket lossPacket;
+
+	private bool gotServerState;
+	private Structs.ServerState serverState;
+
+	private bool gotNewClient;
+	private Structs.NewClient newClient;
 	#endregion
 
 	public void Connect(string ip, ushort port) {
+		this.ipAddress = ip;
+		this.port = port;
 		client = new TCPClient(ip, port);
 		client.SetUpClientInfo(string.Format("({0})-{1}", FindObjectOfType<Server>() != null ? "Server" : "Client", Environment.UserName));
 		client.Connect();
 		client.getConnection.OnStringReceived += OnStringReceived;
 		SetUpTransmissionIds();
 		DontDestroyOnLoad(gameObject);
-		lm.Print("Connected to: " + ip +":"+ port);
 	}
+
+
+	//private Structs.ClientGUID SendGuid() {
+	//	return new Structs.ClientGUID(GameplayStatistics.myNetworkGUID, client.clientInfo.computerName, client.clientID);
+	//}
 
 	private void OnStringReceived(object sender, PacketReceivedEventArgs<string> e) {
 		chatMessage = e;
 		gotMessage = true;
 	}
 
-	private void OnDrawCard(Structs.DrawCardAction action) {
+	private void OnDrawCard(Structs.DrawCardAction action, byte sender) {
 		draw = action;
 		gotDrawCard = true;
 	}
 
-	private void OnExtraInfo(Structs.ExtraCardArgs action) {
+	private void OnExtraInfo(Structs.ExtraCardArgs action, byte sender) {
 		extra = action;
 		gotExtraCard = true;
 	}
 
-	private void OnCardPlayed(Structs.PlayCardAction action) {
+	private void OnCardPlayed(Structs.PlayCardAction action, byte sender) {
 		play = action;
 		gotCardPlayed = true;
 	}
 
-	private void OnInitialData(Structs.InitialData data) {
+	private void OnInitialData(Structs.InitialData data, byte sender) {
 		init = data;
 		gotInitData = true;
+	}
+
+	private void OnGUIDReceived(Structs.ClientGUID obj, byte sender) {
+		guid = obj;
+		gotClientGUID = true;
+	}
+
+	private void OnLost(Structs.LossPacket obj, byte sender) {
+		lossPacket = obj;
+		gotLossPacket = true;
+	}
+
+	private void OnServerStateReceived(Structs.ServerState obj, byte sender) {
+		serverState = obj;
+		gotServerState = true;
+	}
+
+	private void OnNewClientConnected(Structs.NewClient obj, byte sender) {
+		newClient = obj;
+		gotNewClient = true;
 	}
 
 
 	public void SetUpTransmissionIds() {
 		DataIDs ids = client.getConnection.dataIDs;
-		ids.DefineCustomDataTypeForID<Structs.InitialData>(Structs.InitialPacketId, OnInitialData);
-		ids.DefineCustomDataTypeForID<Structs.PlayCardAction>(Structs.PlayCardPacketId, OnCardPlayed);
-		ids.DefineCustomDataTypeForID<Structs.DrawCardAction>(Structs.DrawPacketId, OnDrawCard);
-		ids.DefineCustomDataTypeForID<Structs.ExtraCardArgs>(Structs.ExtraCardArgsPacketId, OnExtraInfo);
-	}
 
+		try {
+			client.DefineResponseEntry(Structs.GUID, SendGuid);
+			ids.DefineCustomDataTypeForID<Structs.InitialData>(Structs.InitialPacketId, OnInitialData);
+			ids.DefineCustomDataTypeForID<Structs.PlayCardAction>(Structs.PlayCardPacketId, OnCardPlayed);
+			ids.DefineCustomDataTypeForID<Structs.DrawCardAction>(Structs.DrawPacketId, OnDrawCard);
+			ids.DefineCustomDataTypeForID<Structs.ExtraCardArgs>(Structs.ExtraCardArgsPacketId, OnExtraInfo);
+			ids.DefineCustomDataTypeForID<Structs.ClientGUID>(Structs.GUID, OnGUIDReceived);
+			ids.DefineCustomDataTypeForID<Structs.LossPacket>(Structs.LossId, OnLost);
+			ids.DefineCustomDataTypeForID<Structs.ServerState>(Structs.ServerStateId, OnServerStateReceived);
+			ids.DefineCustomDataTypeForID<Structs.NewClient>(Structs.NewClientId, OnNewClientConnected);
+			client.getConnection.OnStringReceived += OnStringReceived;
+		}
+		catch(Exception e) {
+			Debug.LogWarning(e.Message + "\n" + e.InnerException?.Message);
+			lm.Print(e.Message + "\n" + e.InnerException?.Message);
+		}
+	}
 
 
 	private void Update() {
@@ -107,7 +162,32 @@ public class Client : MonoBehaviour {
 		if (gotInitData) {
 			SceneManager.LoadScene(Constants.Scene_Game);
 			SceneManager.sceneLoaded += SceneManager_sceneLoaded;
-			
+		}
+		//if (gotClientGUID) {
+		//	PersistentManager.instance.statistics.OnClientConnected(guid);
+		//	gotClientGUID = false;
+		//}
+		//if (gotLossPacket) {
+		//	PersistentManager.instance.statistics.OnMatchLost(lossPacket);
+		//	gotLossPacket = false;
+		//}
+		if (gotServerState) {
+			if (!isHost) {
+				lm.Print("Connected to: " + ipAddress + ":" + port);
+			}
+			foreach (TCPClientInfo info in serverState.connectedClients) {
+				if (info.clientID == client.clientID) {
+					lm.Print("(You)" + client.clientInfo.computerName);
+				}
+				else {
+					lm.Print(info.computerName);
+				}
+			}
+			gotServerState = false;
+		}
+		if (gotNewClient) {
+			lm.Print(newClient.clientInfo.computerName + " just connected!");
+			gotNewClient = false;
 		}
 	}
 

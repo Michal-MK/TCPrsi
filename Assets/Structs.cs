@@ -1,4 +1,7 @@
 ﻿using System.Collections.Generic;
+using System;
+using UnityEngine;
+using Igor.TCP;
 
 public class Structs {
 
@@ -6,6 +9,10 @@ public class Structs {
 	public const byte PlayCardPacketId = 4;
 	public const byte DrawPacketId = 5;
 	public const byte ExtraCardArgsPacketId = 6;
+	public const byte LossId = 8;
+	public const byte GUID = 10;
+	public const byte ServerStateId = 11;
+	public const byte NewClientId = 12;
 
 	[System.Serializable]
 	public struct InitialData {
@@ -72,4 +79,48 @@ public class Structs {
 
 	}
 
+	[Serializable]
+	public struct ClientGUID {
+		public ClientGUID(Guid guid, string clientName, byte playerId) {
+			this.guid = guid;
+			this.playerId = playerId;
+			this.clientName = clientName;
+		}
+
+		public Guid guid;
+		public byte playerId;
+		public string clientName;
+	}
+
+	[Serializable]
+	public struct LossPacket {
+		public LossPacket(Guid winnerGUID, byte playerId) {
+			this.winnerGUID = winnerGUID;
+			this.playerId = playerId;
+		}
+
+		public Guid winnerGUID;
+		public byte playerId;
+	}
+
+	[Serializable]
+	public struct ServerState {
+		public ServerState(TCPClientInfo[] connectedClients, byte playerId) {
+			this.connectedClients = connectedClients;
+			this.playerId = playerId;
+		}
+		public TCPClientInfo[] connectedClients;
+		public byte playerId;
+	}
+
+	[Serializable]
+	public struct NewClient {
+		public TCPClientInfo clientInfo;
+		public byte playerId;
+
+		public NewClient(TCPClientInfo clientInfo, byte playerId) {
+			this.clientInfo = clientInfo;
+			this.playerId = playerId;
+		}
+	}
 }
