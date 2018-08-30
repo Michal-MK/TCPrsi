@@ -16,8 +16,6 @@ public class Player : MonoBehaviour {
 	private bool turnInProgress;
 	public bool controlledByLocal;
 
-	private Card workingCard;
-
 	public byte index;
 
 	public string controllingClientName;
@@ -82,7 +80,7 @@ public class Player : MonoBehaviour {
 			}
 			case Card.CardValue.Svrsek: {
 				if (controlledByLocal) {
-					GetColorInput();
+					GetColorInput(card);
 				}
 				break;
 			}
@@ -185,14 +183,15 @@ public class Player : MonoBehaviour {
 		}
 	}
 
-	public void GetColorInput() {
+	private Card workingCard;
+
+	public void GetColorInput(Card card) {
 		Controls.OnColorSelected += ColorSelected;
 		manager.controls.colorSelector.SetActive(true);
 		waitingForInput = true;
 	}
 
 	public void ColorSelected(object sender, Card.CardColor color) {
-
 		waitingForInput = false;
 		Controls.OnColorSelected -= ColorSelected;
 		workingCard.cardColor = color;
