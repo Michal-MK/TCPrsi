@@ -6,6 +6,7 @@ using System.Threading;
 using System.Collections.Generic;
 using static Structs;
 using System;
+using System.Collections;
 
 public class LobbyManager : MonoBehaviour {
 
@@ -37,43 +38,47 @@ public class LobbyManager : MonoBehaviour {
 			port = 256;
 		}
 		server.Initialise(this, port);
-		AddClient().Connect(Helper.GetActiveIPv4Address().ToString(), port);
+		StartCoroutine(CreateClient(port));
+	}
+
+	private IEnumerator CreateClient(ushort port) {
+		yield return new WaitUntil(() => server.isInitialised);
+		AddClient(true).Connect(Helper.GetActiveIPv4Address().ToString(), port);
 	}
 
 	public void IamClient() {
-		AddClient().Connect(adressPort.text.Split(':')[0], ushort.Parse(adressPort.text.Split(':')[1]));
+		AddClient(false).Connect(adressPort.text.Split(':')[0], ushort.Parse(adressPort.text.Split(':')[1]));
 	}
 
-	Client AddClient() {
+	private Client AddClient(bool isHost) {
 		client = connectionOBJ.AddComponent<Client>();
+		client.isHost = isHost;
 		client.lm = this;
 		return client;
 	}
 
-	//Unnecessary ?
+	private Queue<string> toPrint = new Queue<string>();
+	private bool change = false;
+
 	public void Print(string s) {
-		this.s = s;
+		toPrint.Enqueue(s);
 		change = true;
 	}
-	private string s = "";
-	private bool change = false;
 
 	private void Update() {
 		if (change) {
-			chatbox.text += ("\n" + s);
+			while (toPrint.Count > 0) {
+				chatbox.text += ("\n" + toPrint.Dequeue());
+			}
 			change = false;
-			s = "";
 		}
 	}
-	//
 
-	//No refenreces
 	public void Send() {
 		client.client.getConnection.SendData(textToSend.text);
 		textToSend.text = "";
 	}
 
-	//1 reference lm.Play()
 	public void Play() {
 		server.StartGame();
 	}
@@ -88,7 +93,6 @@ public class LobbyManager : MonoBehaviour {
 		}
 		copyOfStack.Shuffle();
 		return copyOfStack;
-
 	}
 }
 

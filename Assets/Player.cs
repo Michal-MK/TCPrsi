@@ -22,7 +22,6 @@ public class Player : MonoBehaviour {
 
 	public string controllingClientName;
 
-
 	public float angle;
 	public float distance;
 
