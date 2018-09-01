@@ -8,6 +8,8 @@ public class GameManager : MonoBehaviour {
 
 	public static event EventHandler<Player> OnTurnBegin;
 
+	public static event EventHandler OnEffectStateChange;
+
 	public Deck deckManager;
 	public List<Player> players; //Server
 	public int turnCounter;
@@ -23,9 +25,28 @@ public class GameManager : MonoBehaviour {
 	public byte localId;
 	private float localDownOffset;
 
+	private bool _aceState;
+	private int _sevenState;
 
-	public bool AceState;
-	public int SevenState;
+	public bool aceState {
+		get {
+			return _aceState;
+		}
+		set {			
+			_aceState = value;
+			OnEffectStateChange?.Invoke(this, EventArgs.Empty);
+		}
+	}
+	public int sevenState {
+		get {
+			return _sevenState;
+		}
+		set {
+			_sevenState = value;
+			OnEffectStateChange?.Invoke(this, EventArgs.Empty);
+			
+		}
+	}
 
 	public float cameraWidth;
 
@@ -72,10 +93,18 @@ public class GameManager : MonoBehaviour {
 	}
 
 	private void VictoryHandling(object sender, Player winner) {
-		Debug.Log("The winner is " + winner.name);
+		display.DisplayText("The winner is " + winner.controllingClientName);
 
+		if(localId == 0) {
+			controls.InitialiseButtonOne("RestartGame");
+			controls.OnButtonOnePress += WinConfirmed;
+			
+		}
+	}
+
+	private void WinConfirmed(object o, EventArgs e) {
+		controls.OnButtonOnePress -= WinConfirmed;
 		client.client.getConnection.SendData(Constants.GameOverIdentifier);
-
 	}
 
 	private void PlayerTurnFinished(object sender, Player player) {
@@ -93,10 +122,5 @@ public class GameManager : MonoBehaviour {
 
 	public void SendExtraAction(ExtraCardArgs action) {
 		client.client.getConnection.SendUserDefinedData(ExtraCardArgsPacketId, Helper.GetBytesFromObject(action));
-	}
-
-
-	public void ShowSelectedColor(Card.CardColor color) {
-		display.DisplayColor(color);
 	}
 }

@@ -49,7 +49,7 @@ public class Server : MonoBehaviour {
 
 
 	private void Server_OnInt64Received(object sender, PacketReceivedEventArgs<long> e) {
-		if(e.data == 1) {
+		if(e.data == Constants.GameOverIdentifier) {
 			StartGame(false);
 		}
 	}

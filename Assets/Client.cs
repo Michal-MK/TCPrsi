@@ -116,11 +116,11 @@ public class Client : MonoBehaviour {
 		if (gotDrawCard) {
 			if(draw.numCards != 1) {
 				if(draw.numCards == 0) {
-					gm.AceState = false;
+					gm.aceState = false;
 					gm.players[draw.playerId].Draw(draw.numCards);
 				}
 				if(draw.numCards >= 2) {
-					gm.SevenState = 0;
+					gm.sevenState = 0;
 					gm.players[draw.playerId].Draw(draw.numCards);
 				}
 				

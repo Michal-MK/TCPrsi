@@ -1,8 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
+
 
 public class InfoDisplayer : MonoBehaviour {
+
 
 	public GameObject infoDisplay;
 	public GameObject turnIndicatorPrefab;
@@ -18,12 +21,36 @@ public class InfoDisplayer : MonoBehaviour {
 
 	private List<SpriteRenderer> playerArrows = new List<SpriteRenderer>();
 
+	public TextMeshPro gameStateText;
+
 	private void Start() {
 		Player.OnEndTurn += Player_OnEndTurn;
+		GameManager.OnEffectStateChange += EffectStateChange;
+		Player.OnColorSelected += DisplayColor;
 	}
 
 	private void OnDestroy() {
 		Player.OnEndTurn -= Player_OnEndTurn;
+		GameManager.OnEffectStateChange -= EffectStateChange;
+		Player.OnColorSelected -= DisplayColor;
+	}
+
+	private void EffectStateChange(object m, System.EventArgs e) {
+		GameManager manager = (GameManager)m;
+
+		if(manager.sevenState == 0 && manager.aceState == false) {
+			gameStateText.text = "";
+		}
+		else if (manager.sevenState == 0 && manager.aceState == true) {
+			gameStateText.text = "ESO!";
+		}
+		else {
+			gameStateText.text = "SEDM: " + manager.sevenState + "x";
+		}
+	}
+
+	public void DisplayText(string text) {
+		gameStateText.text = text;
 	}
 
 	private void Player_OnEndTurn(object sender, Player e) {
@@ -41,7 +68,8 @@ public class InfoDisplayer : MonoBehaviour {
 		
 	}
 
-	public void DisplayColor(Card.CardColor color) {
+
+	public void DisplayColor(object o, Card.CardColor color) {
 		
 		colorDisplay.enabled = true;
 		showColorForOneTurn = false;

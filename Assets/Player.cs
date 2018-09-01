@@ -9,6 +9,10 @@ public class Player : MonoBehaviour {
 
 	public static event EventHandler<Player> OnVictory;
 
+	public static event EventHandler<Card> OnCardPlayed;
+
+	public static event EventHandler<Card.CardColor> OnColorSelected;
+
 	private List<Card> hand;
 	public GameManager manager;
 
@@ -73,26 +77,31 @@ public class Player : MonoBehaviour {
 
 		switch (card.cardValue) {
 			case Card.CardValue.Sedm: {
-				manager.SevenState += 2;
+				manager.sevenState += 2;
+				turnInProgress = false;
 				OnEndTurn(this, this);
 				break;
 			}
 			case Card.CardValue.Svrsek: {
+				workingCard = card;
 				if (controlledByLocal) {
 					GetColorInput(card);
 				}
 				break;
 			}
 			case Card.CardValue.Eso: {
-				manager.AceState = true;
+				manager.aceState = true;
+				turnInProgress = false;
 				OnEndTurn(this, this);
 				break;
 			}
 			default: {
+				turnInProgress = false;
 				OnEndTurn(this, this);
 				break;
 			}
 		}
+		
 		if (hand.Count == 0) {
 			OnVictory?.Invoke(this, this);
 		}
@@ -103,27 +112,27 @@ public class Player : MonoBehaviour {
 		switch (card.cardValue) {
 			case Card.CardValue.Sedm: {
 				if ((manager.deckManager.talon.Peek().cardColor == card.cardColor || manager.deckManager.talon.Peek().cardValue == card.cardValue)
-						&& manager.AceState == false) {
+						&& manager.aceState == false) {
 					return true;
 				}
 				return false;
 			}
 			case Card.CardValue.Svrsek: {
-				if (manager.AceState == false && manager.SevenState == 0) {
+				if (manager.aceState == false && manager.sevenState == 0) {
 					return true;
 				}
 				return false;
 			}
 			case Card.CardValue.Eso: {
 				if ((manager.deckManager.talon.Peek().cardColor == card.cardColor || manager.deckManager.talon.Peek().cardValue == card.cardValue)
-						&& manager.SevenState == 0) {
+						&& manager.sevenState == 0) {
 					return true;
 				}
 				return false;
 			}
 			default: {
 				if ((manager.deckManager.talon.Peek().cardColor == card.cardColor || manager.deckManager.talon.Peek().cardValue == card.cardValue)
-						&& manager.SevenState == 0 && manager.AceState == false) {
+						&& manager.sevenState == 0 && manager.aceState == false) {
 					return true;
 				}
 				return false;
@@ -138,6 +147,7 @@ public class Player : MonoBehaviour {
 		manager.deckManager.talon.Push(card);
 		card.myRenderer.sortingOrder = order + 1;
 		card.currentOwner = null;
+		OnCardPlayed?.Invoke(this,card);
 		if (controlledByLocal) {
 			manager.SendCardPlayed(new PlayCardAction(new CardInfo(card.cardColor, card.cardValue), index));
 		}
@@ -195,7 +205,7 @@ public class Player : MonoBehaviour {
 		Controls.OnColorSelected -= ColorSelected;
 		workingCard.cardColor = color;
 		workingCard = null;
-		manager.ShowSelectedColor(color);
+		OnColorSelected?.Invoke(this, color);
 
 		if (controlledByLocal) {
 			manager.SendExtraAction(new ExtraCardArgs(color, index));

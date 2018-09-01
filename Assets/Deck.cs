@@ -50,13 +50,13 @@ public class Deck : MonoBehaviour {
 
 	public void OnDeckClick() {
 		if (manager.players[manager.turnCounter].controlledByLocal) {
-			if(manager.AceState == true) {
+			if(manager.aceState == true) {
 				manager.players[manager.turnCounter].Draw(0);
-				manager.AceState = false;
+				manager.aceState = false;
 			}
-			else if(manager.SevenState != 0) {
-				manager.players[manager.turnCounter].Draw(manager.SevenState);
-				manager.SevenState = 0;
+			else if(manager.sevenState != 0) {
+				manager.players[manager.turnCounter].Draw(manager.sevenState);
+				manager.sevenState = 0;
 			}
 			else {
 				manager.players[manager.turnCounter].Draw(1);
